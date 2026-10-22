@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SiPeKA BERITA RRI - Sistem Informasi Pelaporan Kinerja dan Administrasi</title>
+
+  <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5.3 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- FontAwesome 6.5 CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+
+  <!-- Stylesheet Kustom (Glassmorphism & Palet Korporat RRI) -->
+  <?!= include('Stylesheet'); ?>
+</head>
+<body>
+
+  <!-- =====================================================================
+       GLOBAL LOADING OVERLAY
+       ===================================================================== -->
+  <div id="globalLoader" class="loader-overlay">
+    <div class="loader-card glass-card text-center p-4">
+      <div class="rri-spinner mx-auto mb-3"></div>
+      <h6 class="fw-bold text-rri-deep mb-1" id="loaderTitle">Memuat Sistem SiPeKA RRI...</h6>
+      <p class="small text-muted mb-0" id="loaderSubtitle">Menghubungkan ke Database Newsroom</p>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       CUSTOM TOAST CONTAINER (TANPA ALERT BROWSER)
+       ===================================================================== -->
+  <div id="customToastContainer" class="custom-toast-container"></div>
+
+  <!-- =====================================================================
+       HALAMAN LOGIN ELEGAN DENGAN LOGO RESMI SiPeKA (GAMBAR 3)
+       ===================================================================== -->
+  <section id="loginView" class="login-wrapper d-none">
+    <div class="login-bg-decor"></div>
+    <div class="container">
+      <div class="row justify-content-center align-items-center min-vh-100 py-4">
+        <div class="col-12 col-sm-10 col-md-8 col-lg-5 col-xl-4">
+          <div class="login-glass-card p-4 p-md-5">
+            <div class="text-center mb-4">
+              <!-- Logo Resmi SiPeKA Sesuai Gambar 3 Tanpa Diubah -->
+              <div class="sipeka-logo-banner mx-auto mb-3 shadow-sm">
+                <img class="sipeka-logo-render img-fluid" alt="Logo SiPeKA RRI Jambi">
+              </div>
+              <span class="badge rounded-pill bg-rri-cyan-soft text-rri-cyan px-3 py-1 mb-1 fw-semibold">
+                <i class="fa-solid fa-satellite-dish me-1"></i> PORTAL NEWSROOM RESMI
+              </span>
+              <p class="text-rri-cyan-light fw-semibold small mb-0 mt-1" id="loginStationName">LPP RRI Jambi</p>
+              <p class="text-white-50 x-small mt-0.5 mb-0" id="loginAppSubtitle">Sistem Informasi Pelaporan Kinerja dan Administrasi</p>
+            </div>
+
+            <form id="loginForm" onsubmit="handleLoginSubmit(event)" autocomplete="off">
+              <div class="mb-3">
+                <label class="form-label text-white-80 small fw-semibold">
+                  <i class="fa-solid fa-user-astronaut me-1 text-rri-cyan"></i> Username Pengguna
+                </label>
+                <div class="input-group input-group-glass">
+                  <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                  <input type="text" id="loginUsername" class="form-control" placeholder="Masukkan username..." required>
+                </div>
+              </div>
+
+              <div class="mb-4">
+                <label class="form-label text-white-80 small fw-semibold">
+                  <i class="fa-solid fa-shield-halved me-1 text-rri-cyan"></i> Kata Sandi (Password)
+                </label>
+                <div class="input-group input-group-glass">
+                  <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+                  <input type="password" id="loginPassword" class="form-control password-masked" placeholder="••••••••" required>
+                  <button type="button" class="btn btn-glass-toggle" onclick="togglePasswordVisibility('loginPassword', 'loginPassIcon')" tabindex="-1">
+                    <i id="loginPassIcon" class="fa-solid fa-eye"></i>
+                  </button>
+                </div>
+              </div>
+
+              <button type="submit" id="btnSubmitLogin" class="btn btn-rri-cyan w-100 py-2.5 fw-bold rounded-3 shadow">
+                <i class="fa-solid fa-right-to-bracket me-2"></i> MASUK KE SISTEM
+              </button>
+            </form>
+
+            <div class="login-footer-info mt-4 pt-3 border-top border-light border-opacity-10 text-center">
+              <div class="x-small text-white-50">
+                <i class="fa-solid fa-lock me-1 text-rri-cyan"></i> Dilindungi Enkripsi SHA-256 &amp; Token Sesi Aktif
+              </div>
+              <div class="x-small text-white-50 mt-1">
+                Sekali di Udara, Tetap di Udara • LPP RRI
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =====================================================================
+       KERANGKA UTAMA SINGLE PAGE APPLICATION (SPA)
+       ===================================================================== -->
+  <div id="appWrapper" class="app-layout d-none">
+
+    <!-- SIDEBAR NAVIGASI (DESKTOP & TABLET) -->
+    <aside id="appSidebar" class="app-sidebar">
+      <div class="sidebar-brand">
+        <div class="w-100">
+          <div class="d-flex align-items-center justify-content-between mb-2 d-lg-none">
+            <span class="text-white-50 x-small fw-bold">MENU NAVIGASI</span>
+            <button class="btn btn-sm btn-link text-white p-0" onclick="toggleMobileSidebar(false)">
+              <i class="fa-solid fa-xmark fs-5"></i>
+            </button>
+          </div>
+          <!-- Logo Resmi SiPeKA Sesuai Gambar 3 Tanpa Diubah -->
+          <div class="sipeka-logo-sidebar-box">
+            <img class="sipeka-logo-render img-fluid" alt="Logo SiPeKA RRI Jambi">
+          </div>
+          <div class="brand-subtitle text-center text-truncate mt-1.5" id="sidebarStationName">LPP RRI Jambi</div>
+        </div>
+      </div>
+
+      <!-- Kartu Profil Pengguna Aktif -->
+      <div class="sidebar-user-card mx-3 my-3 p-3 rounded-3">
+        <div class="d-flex align-items-center gap-2.5">
+          <div class="user-avatar-circle" id="sidebarAvatarInitial">R</div>
+          <div class="overflow-hidden flex-grow-1">
+            <div class="fw-bold text-white small text-truncate" id="sidebarUserFullName">Nama Pengguna</div>
+            <div class="d-flex align-items-center gap-1 mt-0.5">
+              <span class="badge bg-rri-cyan text-white x-small" id="sidebarUserRoleBadge">Role</span>
+              <span class="text-white-50 x-small text-truncate" id="sidebarUsername">@user</span>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex gap-2 mt-2.5 pt-2 border-top border-light border-opacity-10">
+          <button class="btn btn-xs btn-outline-light flex-grow-1" onclick="openChangeOwnPasswordModal()">
+            <i class="fa-solid fa-key me-1"></i> Ubah Sandi
+          </button>
+          <button class="btn btn-xs btn-danger-soft" onclick="confirmLogout()">
+            <i class="fa-solid fa-power-off me-1"></i> Keluar
+          </button>
+        </div>
+      </div>
+
+      <!-- Menu Navigasi Utama SPA -->
+      <div class="sidebar-nav-scroll px-3 flex-grow-1">
+        <div class="nav-section-label">MENU UTAMA NEWSROOM</div>
+        <ul class="nav flex-column gap-1">
+          <li class="nav-item">
+            <a href="javascript:void(0)" class="sidebar-link active" id="nav-dashboard" onclick="navigateToView('dashboard')">
+              <i class="fa-solid fa-chart-pie"></i>
+              <span>Dashboard Kinerja</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="javascript:void(0)" class="sidebar-link" id="nav-input" onclick="navigateToView('input')">
+              <i class="fa-solid fa-pen-to-square"></i>
+              <span>Input Laporan Berita</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="javascript:void(0)" class="sidebar-link" id="nav-rekap" onclick="navigateToView('rekap')">
+              <i class="fa-solid fa-file-invoice"></i>
+              <span>Rekapitulasi &amp; PDF</span>
+            </a>
+          </li>
+        </ul>
+
+        <!-- Pintasan Cepat Format Acara Dinamis (Dialog Digabung dengan Submenu) -->
+        <div class="nav-section-label mt-4 d-flex justify-content-between align-items-center">
+          <span>PINTASAN FORMAT ACARA</span>
+          <span class="badge bg-white bg-opacity-10 text-white-50 x-small" id="sidebarFormatCount">10</span>
+        </div>
+        <ul class="nav flex-column gap-1" id="sidebarFormatShortcuts">
+          <!-- Dirender dinamis oleh JavaScript (Menu Dialog memiliki Submenu Dialog Pagi & Dialog Kentongan) -->
+        </ul>
+
+        <!-- Menu Khusus Super Admin -->
+        <div id="superAdminNavGroup" class="d-none mt-4">
+          <div class="nav-section-label text-warning">
+            <i class="fa-solid fa-crown me-1"></i> OTORITAS SUPER ADMIN
+          </div>
+          <ul class="nav flex-column gap-1">
+            <li class="nav-item">
+              <a href="javascript:void(0)" class="sidebar-link sidebar-link-admin" id="nav-cpanel" onclick="navigateToView('cpanel')">
+                <i class="fa-solid fa-sliders"></i>
+                <span>Control Panel Sistem</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="sidebar-footer p-3 text-center border-top border-light border-opacity-10">
+        <div class="x-small text-white-50">SiPeKA BERITA RRI v4.2 Enterprise</div>
+      </div>
+    </aside>
+
+    <!-- BACKDROP SIDEBAR MOBILE -->
+    <div id="sidebarBackdrop" class="sidebar-backdrop d-none" onclick="toggleMobileSidebar(false)"></div>
+
+    <!-- AREA KONTEN UTAMA KANAN -->
+    <div class="app-main">
+
+      <!-- TOPBAR / HEADER -->
+      <header class="app-topbar glass-header sticky-top">
+        <div class="d-flex align-items-center gap-3">
+          <button class="btn btn-icon-topbar d-lg-none" onclick="toggleMobileSidebar(true)">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div class="d-none d-sm-block sipeka-logo-topbar-box">
+            <img class="sipeka-logo-render" alt="Logo SiPeKA">
+          </div>
+          <div>
+            <div class="d-flex align-items-center gap-2">
+              <h5 class="fw-extrabold text-rri-deep mb-0" id="topbarPageTitle">Dashboard Ringkasan Kinerja</h5>
+              <span class="badge bg-rri-deep text-white d-none d-md-inline-block" id="topbarStationBadge">LPP RRI Jambi</span>
+            </div>
+            <p class="text-muted x-small mb-0 d-none d-sm-block" id="topbarSubtitle">
+              Sistem Informasi Pelaporan Kinerja dan Administrasi
+            </p>
+          </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+          <button class="btn btn-sm btn-outline-rri" onclick="refreshAllServerData()" title="Sinkronisasi Data Terbaru">
+            <i class="fa-solid fa-arrows-rotate me-1"></i>
+            <span class="d-none d-md-inline">Sinkronisasi</span>
+          </button>
+          <button class="btn btn-sm btn-rri-primary" onclick="navigateToView('input')">
+            <i class="fa-solid fa-plus me-1"></i>
+            <span class="d-none d-sm-inline">Input Berita</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- KONTEN DINAMIS SPA -->
+      <main class="app-content p-3 p-md-4 pb-5 mb-5 mb-lg-0">
+
+        <!-- =================================================================
+             VIEW 1: DASHBOARD RINGKASAN KINERJA
+             ================================================================= -->
+        <section id="view-dashboard" class="spa-view">
+          <!-- Banner Sambutan & Filter Cepat Bulan/Tahun -->
+          <div class="welcome-banner glass-card-dark p-4 rounded-4 mb-4">
+            <div class="row align-items-center g-3">
+              <div class="col-12 col-lg-7">
+                <span class="badge bg-rri-cyan text-white mb-2">
+                  <i class="fa-solid fa-signal me-1"></i> NEWSROOM ANALYTICS
+                </span>
+                <h4 class="fw-extrabold text-white mb-1" id="dashGreetingTitle">Selamat Bertugas di Newsroom LPP RRI Jambi!</h4>
+                <p class="text-white-75 small mb-0" id="dashGreetingSub">
+                  Pantau produktivitas siaran berita, kontribusi reporter, dan capaian format acara secara real-time.
+                </p>
+              </div>
+              <div class="col-12 col-lg-5">
+                <div class="bg-white bg-opacity-10 p-3 rounded-3 border border-light border-opacity-10">
+                  <label class="text-white-80 x-small fw-bold text-uppercase d-block mb-2">
+                    <i class="fa-regular fa-calendar-check me-1 text-rri-cyan"></i> Filter Periode Dashboard
+                  </label>
+                  <div class="row g-2">
+                    <div class="col-7">
+                      <select id="dashFilterMonth" class="form-select form-select-sm" onchange="renderDashboardView()">
+                        <option value="ALL">Semua Bulan</option>
+                        <option value="1">Januari</option>
+                        <option value="2">Februari</option>
+                        <option value="3">Maret</option>
+                        <option value="4">April</option>
+                        <option value="5">Mei</option>
+                        <option value="6">Juni</option>
+                        <option value="7">Juli</option>
+                        <option value="8">Agustus</option>
+                        <option value="9">September</option>
+                        <option value="10">Oktober</option>
+                        <option value="11">November</option>
+                        <option value="12">Desember</option>
+                      </select>
+                    </div>
+                    <div class="col-5">
+                      <select id="dashFilterYear" class="form-select form-select-sm" onchange="renderDashboardView()"></select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4 Kartu KPI Utama -->
+          <div class="row g-3 mb-4">
+            <div class="col-6 col-xl-3">
+              <div class="kpi-card glass-card p-3 p-md-4 h-100">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <div class="text-muted x-small fw-bold text-uppercase">Total Laporan Periode</div>
+                    <h2 class="fw-extrabold text-rri-deep mt-1 mb-0" id="kpiTotalPeriode">0</h2>
+                  </div>
+                  <div class="kpi-icon bg-rri-deep text-white"><i class="fa-solid fa-newspaper"></i></div>
+                </div>
+                <div class="x-small text-muted mt-2">Berita &amp; Program Tersiar</div>
+              </div>
+            </div>
+
+            <div class="col-6 col-xl-3">
+              <div class="kpi-card glass-card p-3 p-md-4 h-100">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <div class="text-muted x-small fw-bold text-uppercase">Siaran Hari Ini</div>
+                    <h2 class="fw-extrabold text-rri-cyan mt-1 mb-0" id="kpiTotalHariIni">0</h2>
+                  </div>
+                  <div class="kpi-icon bg-rri-cyan text-white"><i class="fa-solid fa-bolt"></i></div>
+                </div>
+                <div class="x-small text-muted mt-2" id="kpiDateTodayLabel">Tanggal Hari Ini</div>
+              </div>
+            </div>
+
+            <div class="col-6 col-xl-3">
+              <div class="kpi-card glass-card p-3 p-md-4 h-100">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <div class="text-muted x-small fw-bold text-uppercase">Reporter Aktif</div>
+                    <h2 class="fw-extrabold text-success mt-1 mb-0" id="kpiActiveReporters">0</h2>
+                  </div>
+                  <div class="kpi-icon bg-success text-white"><i class="fa-solid fa-microphone-lines"></i></div>
+                </div>
+                <div class="x-small text-muted mt-2">Personel Terdaftar Aktif</div>
+              </div>
+            </div>
+
+            <div class="col-6 col-xl-3">
+              <div class="kpi-card glass-card p-3 p-md-4 h-100">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <div class="text-muted x-small fw-bold text-uppercase">Format Acara Aktif</div>
+                    <h2 class="fw-extrabold text-primary mt-1 mb-0" id="kpiActiveFormats">0</h2>
+                  </div>
+                  <div class="kpi-icon bg-primary text-white"><i class="fa-solid fa-layer-group"></i></div>
+                </div>
+                <div class="x-small text-muted mt-2">Kategori Program RRI</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Breakdown Format Acara & Peringkat Produktivitas Reporter -->
+          <div class="row g-4 mb-4">
+            <div class="col-12 col-xl-5">
+              <div class="glass-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <div>
+                    <h6 class="fw-extrabold text-rri-deep mb-0">
+                      <i class="fa-solid fa-chart-bar text-rri-cyan me-2"></i>Capaian per Format Acara
+                    </h6>
+                    <small class="text-muted x-small">Klik format acara untuk langsung mengisi laporan</small>
+                  </div>
+                </div>
+                <div id="dashFormatBreakdown" class="vstack gap-2"></div>
+              </div>
+            </div>
+
+            <div class="col-12 col-xl-7">
+              <div class="glass-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <div>
+                    <h6 class="fw-extrabold text-rri-deep mb-0">
+                      <i class="fa-solid fa-table-cells text-rri-cyan me-2"></i>Matriks Produktivitas Reporter &amp; Kategori
+                    </h6>
+                    <small class="text-muted x-small">Rekapitulasi kategori Umum, RB Tematik, Prioritas Nasional, &amp; Astacita</small>
+                  </div>
+                  <button class="btn btn-xs btn-outline-rri" onclick="navigateToView('rekap')">
+                    Detail &amp; Cetak PDF <i class="fa-solid fa-arrow-right ms-1"></i>
+                  </button>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-rri table-hover align-middle mb-0">
+                    <thead>
+                      <tr>
+                        <th>No</th>
+                        <th>Nama Reporter</th>
+                        <th class="text-center">Umum</th>
+                        <th class="text-center">RB Tematik</th>
+                        <th class="text-center">Prioritas Nasional</th>
+                        <th class="text-center">Astacita</th>
+                        <th class="text-center">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody id="dashReporterMatrixBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabel 10 Laporan Berita Terbaru -->
+          <div class="glass-card p-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+              <div>
+                <h6 class="fw-extrabold text-rri-deep mb-0">
+                  <i class="fa-solid fa-clock-rotate-left text-rri-cyan me-2"></i> Aktivitas Laporan Berita Terbaru
+                </h6>
+                <small class="text-muted x-small">Menampilkan laporan berita terakhir yang masuk ke sistem</small>
+              </div>
+              <button class="btn btn-sm btn-outline-rri" onclick="navigateToView('rekap')">
+                Lihat Semua Laporan
+              </button>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-rri table-hover align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th>Tanggal Siar</th>
+                    <th>Format Acara</th>
+                    <th>Nama Reporter</th>
+                    <th>Judul Berita / Topik Siaran</th>
+                    <th>Narasumber &amp; Jabatan</th>
+                    <th class="text-center">Kategori</th>
+                    <th class="text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="dashRecentBeritaBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- =================================================================
+             VIEW 2: FORM INPUT LAPORAN BERITA DINAMIS KHAS BROADCASTER RRI
+             ================================================================= -->
+        <section id="view-input" class="spa-view d-none">
+          <div class="row g-4">
+            <!-- Kolom Form Input Utama -->
+            <div class="col-12 col-xl-7">
+              <div class="glass-card p-4">
+                <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="form-header-icon" id="dynamicFormIconBox">
+                      <i class="fa-solid fa-microphone-lines" id="dynamicFormIcon"></i>
+                    </div>
+                    <div>
+                      <span class="badge bg-rri-cyan-soft text-rri-cyan x-small fw-bold" id="dynamicFormCategoryBadge">
+                        FORMULIR PEMBERITAAN &amp; PROGRAM
+                      </span>
+                      <h5 class="fw-extrabold text-rri-deep mb-0 mt-0.5" id="dynamicFormTitle">
+                        Input Laporan Berita / Acara RRI
+                      </h5>
+                    </div>
+                  </div>
+                  <button type="button" id="btnCancelEditMode" class="btn btn-sm btn-outline-danger d-none" onclick="resetBeritaForm()">
+                    <i class="fa-solid fa-xmark me-1"></i> Batal Edit
+                  </button>
+                </div>
+
+                <form id="formInputBerita" onsubmit="handleBeritaFormSubmit(event)">
+                  <input type="hidden" id="inputIdBerita" value="">
+
+                  <div class="row g-3">
+                    <!-- Tanggal Siar -->
+                    <div class="col-12 col-md-6">
+                      <label class="form-label fw-bold small text-rri-deep">
+                        <i class="fa-regular fa-calendar me-1 text-rri-cyan"></i> Tanggal Siar / Tayang <span class="text-danger">*</span>
+                      </label>
+                      <input type="date" id="inputTanggalSiar" class="form-control" required>
+                    </div>
+
+                    <!-- Format Acara -->
+                    <div class="col-12 col-md-6">
+                      <label class="form-label fw-bold small text-rri-deep">
+                        <i class="fa-solid fa-layer-group me-1 text-rri-cyan"></i> Format Acara <span class="text-danger">*</span>
+                      </label>
+                      <select id="inputIdFormat" class="form-select" onchange="handleFormatAcaraChange()" required></select>
+                    </div>
+
+                    <!-- Nama Reporter -->
+                    <div class="col-12 col-md-6">
+                      <label class="form-label fw-bold small text-rri-deep">
+                        <i class="fa-solid fa-user-tie me-1 text-rri-cyan"></i> Nama Reporter <span class="text-danger">*</span>
+                      </label>
+                      <select id="inputNamaReporter" class="form-select" required></select>
+                    </div>
+
+                    <!-- Pilihan Dropbox untuk Seluruh Format: Umum, RB Tematik, Prioritas Nasional, Astacita -->
+                    <div class="col-12 col-md-6">
+                      <label class="form-label fw-bold small text-rri-deep">
+                        <i class="fa-solid fa-tags me-1 text-rri-cyan"></i> Kategori / Klasifikasi Program <span class="text-danger">*</span>
+                      </label>
+                      <select id="inputJenisLaporan" class="form-select" required>
+                        <option value="Umum">Umum</option>
+                        <option value="RB Tematik">RB Tematik</option>
+                        <option value="Prioritas Nasional">Prioritas Nasional</option>
+                        <option value="Astacita">Astacita</option>
+                      </select>
+                    </div>
+
+                    <!-- Judul Berita / Topik Siaran -->
+                    <div class="col-12">
+                      <label class="form-label fw-bold small text-rri-deep" id="labelJudulBerita">
+                        <i class="fa-solid fa-heading me-1 text-rri-cyan"></i> Judul Berita / Topik Siaran <span class="text-danger">*</span>
+                      </label>
+                      <input type="text" id="inputJudulBerita" class="form-control" placeholder="Ketikkan judul berita atau topik utama siaran..." required>
+                    </div>
+
+                    <!-- Area Narasumber Dinamis: Mode Standar (1 Narasumber & Jabatan) -->
+                    <div class="col-12" id="singleNarasumberWrapper">
+                      <div class="p-3 rounded-3 bg-light border">
+                        <label class="form-label fw-bold small text-rri-deep mb-2">
+                          <i class="fa-solid fa-user-check me-1 text-rri-cyan"></i> Data Narasumber &amp; Jabatan
+                          <span class="text-muted fw-normal x-small ms-1">(Kosongkan atau isi "-" jika berita tanpa wawancara narasumber)</span>
+                        </label>
+                        <div class="row g-2">
+                          <div class="col-12 col-md-6">
+                            <input type="text" id="singleNaraNama" class="form-control form-control-sm" placeholder="Nama Narasumber (Contoh: Dr. H. Hendra, M.Si)">
+                          </div>
+                          <div class="col-12 col-md-6">
+                            <input type="text" id="singleNaraJabatan" class="form-control form-control-sm" placeholder="Jabatan / Instansi (Contoh: Kepala Dinas Kesehatan)">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Area Narasumber Dinamis: Mode Multi-Narasumber (Hingga 4 Narasumber untuk Dialog Pagi / Dialog Kentongan / News Indept / Dokumenter) -->
+                    <div class="col-12 d-none" id="multiNarasumberWrapper">
+                      <div class="p-3 rounded-3 bg-rri-soft border border-info border-opacity-25">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                          <label class="form-label fw-bold small text-rri-deep mb-0">
+                            <i class="fa-solid fa-users-viewfinder me-1 text-rri-cyan"></i> Daftar Narasumber Dialog / Indept / Dokumenter (Maks. 4 Narasumber)
+                          </label>
+                          <span class="badge bg-rri-deep text-white x-small">Multi-Narasumber</span>
+                        </div>
+                        <div class="row g-2">
+                          <!-- Narasumber 1 -->
+                          <div class="col-12 col-md-6">
+                            <div class="input-group input-group-sm">
+                              <span class="input-group-text fw-bold bg-white">Nara 1</span>
+                              <input type="text" id="multiNaraNama1" class="form-control" placeholder="Nama Narasumber 1">
+                            </div>
+                          </div>
+                          <div class="col-12 col-md-6">
+                            <input type="text" id="multiNaraJab1" class="form-control form-control-sm" placeholder="Jabatan / Instansi Narasumber 1">
+                          </div>
+                          <!-- Narasumber 2 -->
+                          <div class="col-12 col-md-6">
+                            <div class="input-group input-group-sm">
+                              <span class="input-group-text fw-bold bg-white">Nara 2</span>
+                              <input type="text" id="multiNaraNama2" class="form-control" placeholder="Nama Narasumber 2 (Opsional)">
+                            </div>
+                          </div>
+                          <div class="col-12 col-md-6">
+                            <input type="text" id="multiNaraJab2" class="form-control form-control-sm" placeholder="Jabatan / Instansi Narasumber 2">
+                          </div>
+                          <!-- Narasumber 3 -->
+                          <div class="col-12 col-md-6">
+                            <div class="input-group input-group-sm">
+                              <span class="input-group-text fw-bold bg-white">Nara 3</span>
+                              <input type="text" id="multiNaraNama3" class="form-control" placeholder="Nama Narasumber 3 (Opsional)">
+                            </div>
+                          </div>
+                          <div class="col-12 col-md-6">
+                            <input type="text" id="multiNaraJab3" class="form-control form-control-sm" placeholder="Jabatan / Instansi Narasumber 3">
+                          </div>
+                          <!-- Narasumber 4 -->
+                          <div class="col-12 col-md-6">
+                            <div class="input-group input-group-sm">
+                              <span class="input-group-text fw-bold bg-white">Nara 4</span>
+                              <input type="text" id="multiNaraNama4" class="form-control" placeholder="Nama Narasumber 4 (Opsional)">
+                            </div>
+                          </div>
+                          <div class="col-12 col-md-6">
+                            <input type="text" id="multiNaraJab4" class="form-control form-control-sm" placeholder="Jabatan / Instansi Narasumber 4">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Keterangan / Catatan Pengarah Acara (Pilihan Gambar 1 sudah dihapus sesuai instruksi) -->
+                    <div class="col-12">
+                      <label class="form-label fw-bold small text-rri-deep">
+                        <i class="fa-regular fa-comment-dots me-1 text-rri-cyan"></i> Keterangan Tambahan / Catatan Pengarah Acara
+                      </label>
+                      <textarea id="inputKeterangan" class="form-control" rows="2" placeholder="Contoh: Disiarkan pada Pro 1 pukul 07.00 WIB / Host: Budi Santoso"></textarea>
+                    </div>
+
+                    <div class="col-12 pt-2">
+                      <div class="d-flex gap-2 justify-content-end">
+                        <button type="button" class="btn btn-light border px-4" onclick="resetBeritaForm()">
+                          <i class="fa-solid fa-eraser me-1"></i> Bersihkan
+                        </button>
+                        <button type="submit" id="btnSaveBerita" class="btn btn-rri-primary px-4 fw-bold">
+                          <i class="fa-solid fa-floppy-disk me-2"></i> SIMPAN LAPORAN BERITA
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <!-- Kolom Samping: Riwayat Input Saya & Rekap Cepat Hari Ini -->
+            <div class="col-12 col-xl-5">
+              <div class="glass-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <div>
+                    <h6 class="fw-extrabold text-rri-deep mb-0">
+                      <i class="fa-solid fa-list-check text-rri-cyan me-2"></i>Riwayat Input Terbaru Anda
+                    </h6>
+                    <small class="text-muted x-small">Anda dapat mengedit atau menghapus laporan apabila terdapat salah ketik</small>
+                  </div>
+                </div>
+                <div id="myRecentInputsContainer" class="vstack gap-2.5"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- =================================================================
+             VIEW 3: REKAPITULASI & LAPORAN MULTI-DIMENSI + CETAK PDF RESMI
+             ================================================================= -->
+        <section id="view-rekap" class="spa-view d-none">
+          <!-- Panel Filter Multi-Dimensi -->
+          <div class="glass-card p-4 mb-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom pb-3 mb-3">
+              <div>
+                <h6 class="fw-extrabold text-rri-deep mb-0">
+                  <i class="fa-solid fa-filter text-rri-cyan me-2"></i>Filter Laporan Multi-Dimensi
+                </h6>
+                <small class="text-muted x-small">Kombinasikan periode waktu, nama reporter, format acara, dan kata kunci</small>
+              </div>
+              <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-secondary" onclick="resetRekapFilter()">
+                  <i class="fa-solid fa-rotate-left me-1"></i> Reset Filter
+                </button>
+                <button class="btn btn-sm btn-danger fw-bold shadow-sm" id="btnPrintOfficialPDF" onclick="triggerDownloadPDF()">
+                  <i class="fa-solid fa-file-pdf me-1"></i> Cetak / Download PDF Resmi
+                </button>
+              </div>
+            </div>
+
+            <div class="row g-3 align-items-end">
+              <!-- Mode Periode Waktu -->
+              <div class="col-12 col-md-3">
+                <label class="form-label small fw-bold text-rri-deep">Mode Periode Waktu</label>
+                <select id="rekapModePeriode" class="form-select form-select-sm" onchange="handleRekapModeChange()">
+                  <option value="HARIAN">Laporan Harian (1 Tanggal Spesifik)</option>
+                  <option value="BULANAN" selected>Laporan Bulanan (Bulan &amp; Tahun)</option>
+                  <option value="INTERVAL">Interval Tanggal (Custom Date Range)</option>
+                </select>
+              </div>
+
+              <!-- Input Harian -->
+              <div class="col-12 col-md-3 d-none" id="rekapBoxHarian">
+                <label class="form-label small fw-bold text-rri-deep">Pilih Tanggal Siar</label>
+                <input type="date" id="rekapTanggalHarian" class="form-control form-control-sm" onchange="applyMultiDimensionalFilter()">
+              </div>
+
+              <!-- Input Bulanan -->
+              <div class="col-6 col-md-2" id="rekapBoxBulan">
+                <label class="form-label small fw-bold text-rri-deep">Pilih Bulan</label>
+                <select id="rekapBulan" class="form-select form-select-sm" onchange="applyMultiDimensionalFilter()">
+                  <option value="1">Januari</option>
+                  <option value="2">Februari</option>
+                  <option value="3">Maret</option>
+                  <option value="4">April</option>
+                  <option value="5">Mei</option>
+                  <option value="6">Juni</option>
+                  <option value="7">Juli</option>
+                  <option value="8">Agustus</option>
+                  <option value="9">September</option>
+                  <option value="10">Oktober</option>
+                  <option value="11">November</option>
+                  <option value="12">Desember</option>
+                </select>
+              </div>
+              <div class="col-6 col-md-1" id="rekapBoxTahun">
+                <label class="form-label small fw-bold text-rri-deep">Tahun</label>
+                <select id="rekapTahun" class="form-select form-select-sm" onchange="applyMultiDimensionalFilter()"></select>
+              </div>
+
+              <!-- Input Interval Tanggal -->
+              <div class="col-6 col-md-2 d-none" id="rekapBoxIntervalStart">
+                <label class="form-label small fw-bold text-rri-deep">Dari Tanggal Awal</label>
+                <input type="date" id="rekapTanggalAwal" class="form-control form-control-sm" onchange="applyMultiDimensionalFilter()">
+              </div>
+              <div class="col-6 col-md-2 d-none" id="rekapBoxIntervalEnd">
+                <label class="form-label small fw-bold text-rri-deep">s/d Tanggal Akhir</label>
+                <input type="date" id="rekapTanggalAkhir" class="form-control form-control-sm" onchange="applyMultiDimensionalFilter()">
+              </div>
+
+              <!-- Filter Nama Reporter -->
+              <div class="col-12 col-md-3">
+                <label class="form-label small fw-bold text-rri-deep">Filter Nama Reporter</label>
+                <select id="rekapFilterReporter" class="form-select form-select-sm" onchange="applyMultiDimensionalFilter()"></select>
+              </div>
+
+              <!-- Filter Format Acara -->
+              <div class="col-12 col-md-3">
+                <label class="form-label small fw-bold text-rri-deep">Filter Format Acara</label>
+                <select id="rekapFilterFormat" class="form-select form-select-sm" onchange="applyMultiDimensionalFilter()"></select>
+              </div>
+
+              <!-- Pencarian Kata Kunci -->
+              <div class="col-12">
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass text-rri-cyan"></i></span>
+                  <input type="text" id="rekapKeyword" class="form-control" placeholder="Cari kata kunci judul berita, topik siaran, nama narasumber, kategori (Umum/RB Tematik/Prioritas Nasional/Astacita)..." oninput="applyMultiDimensionalFilter()">
+                  <button class="btn btn-rri-primary px-3" type="button" onclick="applyMultiDimensionalFilter()">
+                    Terapkan Filter
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Output Laporan: Kartu Statistik Ringkas, Breakdown Format, & Matriks Reporter -->
+          <div class="row g-3 mb-4">
+            <div class="col-12 col-lg-4">
+              <div class="glass-card p-3 h-100">
+                <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-2">
+                  <span class="fw-bold small text-rri-deep">
+                    <i class="fa-solid fa-chart-simple text-rri-cyan me-1"></i> Ringkasan Statistik Filter
+                  </span>
+                  <span class="badge bg-rri-deep" id="rekapStatTotalBadge">0 Berita</span>
+                </div>
+                <div id="rekapFormatSummaryBadges" class="d-flex flex-wrap gap-1.5 mt-2"></div>
+              </div>
+            </div>
+
+            <div class="col-12 col-lg-8">
+              <div class="glass-card p-3 h-100">
+                <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-2">
+                  <span class="fw-bold small text-rri-deep">
+                    <i class="fa-solid fa-users-gear text-rri-cyan me-1"></i> Matriks Produktivitas Reporter (Sesuai Filter)
+                  </span>
+                </div>
+                <div id="rekapReporterProductivityPills" class="d-flex flex-wrap gap-2 mt-2"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabel Rincian Berita Lengkap -->
+          <div class="glass-card p-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+              <div>
+                <h6 class="fw-extrabold text-rri-deep mb-0">
+                  <i class="fa-solid fa-table-list text-rri-cyan me-2"></i>Tabel Rincian Laporan Berita &amp; Program
+                </h6>
+                <small class="text-muted x-small" id="rekapTableSubtitle">Menampilkan hasil penyaringan laporan</small>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-rri table-hover align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th style="width:45px;">No</th>
+                    <th style="width:105px;">Tanggal Siar</th>
+                    <th>Format Acara</th>
+                    <th>Nama Reporter</th>
+                    <th>Judul Berita / Topik Siaran</th>
+                    <th>Narasumber &amp; Jabatan</th>
+                    <th class="text-center">Kategori</th>
+                    <th class="text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="rekapTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- =================================================================
+             VIEW 4: CONTROL PANEL SISTEM (KHUSUS SUPER ADMIN)
+             ================================================================= -->
+        <section id="view-cpanel" class="spa-view d-none">
+          <div class="glass-card p-3 p-md-4 mb-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+              <div>
+                <span class="badge bg-warning text-dark fw-bold x-small mb-1">
+                  <i class="fa-solid fa-user-shield me-1"></i> SUPER ADMIN CONTROL PANEL
+                </span>
+                <h5 class="fw-extrabold text-rri-deep mb-0">Pusat Kendali Master Data &amp; Konfigurasi Sistem</h5>
+              </div>
+            </div>
+
+            <!-- Navigasi Sub-Tab Control Panel -->
+            <ul class="nav nav-pills cpanel-nav-pills gap-2 mb-4" id="cpanelTabs">
+              <li class="nav-item">
+                <button class="nav-link active" onclick="switchCPanelTab('tab-format', this)">
+                  <i class="fa-solid fa-layer-group me-1"></i> 1. Format Acara
+                </button>
+              </li>
+              <li class="nav-item">
+                <button class="nav-link" onclick="switchCPanelTab('tab-reporter', this)">
+                  <i class="fa-solid fa-microphone-lines me-1"></i> 2. Data Reporter
+                </button>
+              </li>
+              <li class="nav-item">
+                <button class="nav-link" onclick="switchCPanelTab('tab-users', this)">
+                  <i class="fa-solid fa-users-cog me-1"></i> 3. Akun Pengguna
+                </button>
+              </li>
+              <li class="nav-item">
+                <button class="nav-link" onclick="switchCPanelTab('tab-settings', this)">
+                  <i class="fa-solid fa-building-columns me-1"></i> 4. Pengaturan &amp; Log
+                </button>
+              </li>
+              <li class="nav-item">
+                <button class="nav-link" onclick="switchCPanelTab('tab-master-berita', this)">
+                  <i class="fa-solid fa-database me-1"></i> 5. Master Data Berita
+                </button>
+              </li>
+            </ul>
+
+            <!-- SUB-TAB 1: MANAJEMEN FORMAT ACARA -->
+            <div id="tab-format" class="cpanel-subview">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold text-rri-deep mb-0">Daftar Master Format Acara Siaran</h6>
+                <button class="btn btn-sm btn-rri-primary" onclick="openFormatModal()">
+                  <i class="fa-solid fa-plus me-1"></i> Tambah Format Acara
+                </button>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-rri table-hover align-middle">
+                  <thead>
+                    <tr>
+                      <th>ID Format</th>
+                      <th>Ikon &amp; Nama Format Acara</th>
+                      <th>Tipe Form Input</th>
+                      <th class="text-center">Status</th>
+                      <th class="text-center">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="cpanelFormatTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- SUB-TAB 2: MANAJEMEN DATA REPORTER -->
+            <div id="tab-reporter" class="cpanel-subview d-none">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold text-rri-deep mb-0">Daftar Master Data Reporter / Broadcaster</h6>
+                <button class="btn btn-sm btn-rri-primary" onclick="openReporterModal()">
+                  <i class="fa-solid fa-user-plus me-1"></i> Tambah Reporter Baru
+                </button>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-rri table-hover align-middle">
+                  <thead>
+                    <tr>
+                      <th>ID Reporter</th>
+                      <th>Nama Lengkap Reporter</th>
+                      <th>NIP / ID Pegawai</th>
+                      <th>Jabatan</th>
+                      <th class="text-center">Status</th>
+                      <th class="text-center">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="cpanelReporterTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- SUB-TAB 3: MANAJEMEN AKUN PENGGUNA -->
+            <div id="tab-users" class="cpanel-subview d-none">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                  <h6 class="fw-bold text-rri-deep mb-0">Manajemen Akun &amp; Hak Akses (RBAC)</h6>
+                  <small class="text-muted x-small">Akun utama <code>superadmin</code> dilindungi secara permanen dari penghapusan</small>
+                </div>
+                <button class="btn btn-sm btn-rri-primary" onclick="openUserModal()">
+                  <i class="fa-solid fa-user-shield me-1"></i> Tambah Akun Pengguna
+                </button>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-rri table-hover align-middle">
+                  <thead>
+                    <tr>
+                      <th>Username</th>
+                      <th>Nama Lengkap Pengguna</th>
+                      <th>Role Akses</th>
+                      <th class="text-center">Status Akun</th>
+                      <th class="text-center">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="cpanelUserTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- SUB-TAB 4: PENGATURAN SISTEM & LOG AKTIVITAS -->
+            <div id="tab-settings" class="cpanel-subview d-none">
+              <div class="row g-4">
+                <div class="col-12 col-lg-5">
+                  <div class="p-3 rounded-3 border bg-light">
+                    <h6 class="fw-bold text-rri-deep mb-3">
+                      <i class="fa-solid fa-sliders text-rri-cyan me-1"></i> Konfigurasi Instansi &amp; Kop Laporan PDF
+                    </h6>
+                    <form id="formSystemSettings" onsubmit="handleSaveSettings(event)">
+                      <div class="mb-2.5">
+                        <label class="form-label small fw-bold">Nama Satuan Kerja / Stasiun RRI</label>
+                        <input type="text" id="cfgNamaStasiun" class="form-control form-control-sm" placeholder="Contoh: LPP RRI Jambi" required>
+                      </div>
+                      <div class="mb-2.5">
+                        <label class="form-label small fw-bold">Sub-Judul Aplikasi</label>
+                        <input type="text" id="cfgSubJudul" class="form-control form-control-sm" required>
+                      </div>
+                      <div class="mb-2.5">
+                        <label class="form-label small fw-bold">Nama Pejabat Tanda Tangan (Ketua Tim / Kepsta)</label>
+                        <input type="text" id="cfgNamaPejabat" class="form-control form-control-sm" required>
+                      </div>
+                      <div class="mb-2.5">
+                        <label class="form-label small fw-bold">NIP Pejabat Berwenang</label>
+                        <input type="text" id="cfgNipPejabat" class="form-control form-control-sm" required>
+                      </div>
+                      <div class="row g-2 mb-3">
+                        <div class="col-6">
+                          <label class="form-label small fw-bold">Kota Stasiun</label>
+                          <input type="text" id="cfgKotaStasiun" class="form-control form-control-sm" required>
+                        </div>
+                        <div class="col-6">
+                          <label class="form-label small fw-bold">Mode Maintenance</label>
+                          <select id="cfgMaintenance" class="form-select form-select-sm">
+                            <option value="TIDAK">TIDAK (Normal)</option>
+                            <option value="YA">YA (Hanya Super Admin)</option>
+                          </select>
+                        </div>
+                      </div>
+                      <button type="submit" id="btnSaveSettings" class="btn btn-rri-primary btn-sm w-100 fw-bold py-2">
+                        <i class="fa-solid fa-floppy-disk me-1"></i> SIMPAN KONFIGURASI SISTEM
+                      </button>
+                    </form>
+                  </div>
+                </div>
+
+                <div class="col-12 col-lg-7">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold text-rri-deep mb-0">
+                      <i class="fa-solid fa-clipboard-list text-rri-cyan me-1"></i> Log Aktivitas Pengguna (Audit Trail)
+                    </h6>
+                    <button class="btn btn-xs btn-outline-danger" onclick="confirmClearLogs()">
+                      <i class="fa-solid fa-trash-can me-1"></i> Bersihkan Log
+                    </button>
+                  </div>
+                  <div class="table-responsive" style="max-height: 360px;">
+                    <table class="table table-rri table-sm align-middle">
+                      <thead class="sticky-top">
+                        <tr>
+                          <th>Waktu</th>
+                          <th>User</th>
+                          <th>Aksi</th>
+                          <th>Detail Aktivitas</th>
+                        </tr>
+                      </thead>
+                      <tbody id="cpanelLogsTableBody"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SUB-TAB 5: KELOLA MASTER DATA BERITA -->
+            <div id="tab-master-berita" class="cpanel-subview d-none">
+              <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <div>
+                  <h6 class="fw-bold text-rri-deep mb-0">Kelola Seluruh Master Data Berita</h6>
+                  <small class="text-muted x-small">Super Admin memiliki hak akses mengedit atau menghapus seluruh laporan berita yang masuk</small>
+                </div>
+                <div class="input-group input-group-sm" style="max-width: 320px;">
+                  <span class="input-group-text bg-white"><i class="fa-solid fa-search"></i></span>
+                  <input type="text" id="cpanelMasterBeritaSearch" class="form-control" placeholder="Cari ID, reporter, judul..." oninput="renderCPanelMasterBerita()">
+                </div>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-rri table-hover align-middle">
+                  <thead>
+                    <tr>
+                      <th>ID Berita</th>
+                      <th>Tanggal Siar</th>
+                      <th>Format</th>
+                      <th>Reporter</th>
+                      <th>Judul Berita / Topik</th>
+                      <th>Kategori</th>
+                      <th>Penginput</th>
+                      <th class="text-center">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="cpanelMasterBeritaBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+      </main>
+
+      <!-- BOTTOM NAVIGATION BAR (KHUSUS MOBILE) -->
+      <nav class="mobile-bottom-nav d-lg-none">
+        <a href="javascript:void(0)" class="mob-nav-item active" id="mob-dashboard" onclick="navigateToView('dashboard')">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="javascript:void(0)" class="mob-nav-item" id="mob-input" onclick="navigateToView('input')">
+          <i class="fa-solid fa-circle-plus"></i>
+          <span>Input Berita</span>
+        </a>
+        <a href="javascript:void(0)" class="mob-nav-item" id="mob-rekap" onclick="navigateToView('rekap')">
+          <i class="fa-solid fa-file-pdf"></i>
+          <span>Laporan</span>
+        </a>
+        <a href="javascript:void(0)" class="mob-nav-item d-none" id="mob-cpanel" onclick="navigateToView('cpanel')">
+          <i class="fa-solid fa-sliders"></i>
+          <span>Admin</span>
+        </a>
+      </nav>
+
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       MODAL DIALOG KUSTOM (PENGGANTI ALERT / CONFIRM / PROMPT BROWSER)
+       ===================================================================== -->
+
+  <!-- 1. Modal Konfirmasi Kustom -->
+  <div class="modal fade" id="customConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content glass-modal border-0 shadow-lg">
+        <div class="modal-body text-center p-4">
+          <div class="confirm-icon-circle mx-auto mb-3" id="confirmModalIconBox">
+            <i class="fa-solid fa-triangle-exclamation fs-3 text-danger" id="confirmModalIcon"></i>
+          </div>
+          <h6 class="fw-extrabold text-rri-deep mb-2" id="confirmModalTitle">Konfirmasi Tindakan</h6>
+          <p class="text-muted small mb-4" id="confirmModalMessage">Apakah Anda yakin ingin melanjutkan?</p>
+          <div class="d-flex gap-2 justify-content-center">
+            <button type="button" class="btn btn-sm btn-light border flex-grow-1 py-2" data-bs-dismiss="modal">Batal</button>
+            <button type="button" class="btn btn-sm btn-danger flex-grow-1 py-2 fw-bold" id="btnConfirmModalYes">Ya, Lanjutkan</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Modal Form Format Acara (Super Admin) -->
+  <div class="modal fade" id="modalFormatAcara" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content glass-modal border-0 shadow-lg">
+        <div class="modal-header bg-rri-deep text-white">
+          <h6 class="modal-title fw-bold" id="modalFormatTitle">Tambah Format Acara</h6>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="formModalFormat" onsubmit="submitModalFormat(event)">
+          <div class="modal-body p-4">
+            <input type="hidden" id="fmtIdFormat">
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Nama Format Acara <span class="text-danger">*</span></label>
+              <input type="text" id="fmtNamaFormat" class="form-control" placeholder="Contoh: Dialog Pagi / Dialog Kentongan" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Kategori Konfigurasi Form Input</label>
+              <select id="fmtKategoriForm" class="form-select">
+                <option value="STANDAR">STANDAR (1 Narasumber &amp; Jabatan)</option>
+                <option value="MULTI_NARA">MULTI_NARA (Hingga 4 Narasumber: Dialog/Indept/Dokumenter)</option>
+                <option value="KBRN">KBRN (Fokus Berita Online Portal KBRN)</option>
+              </select>
+            </div>
+            <div class="row g-2">
+              <div class="col-7">
+                <label class="form-label small fw-bold">Kelas Ikon FontAwesome 6</label>
+                <input type="text" id="fmtIkonFA" class="form-control" placeholder="fa-newspaper" value="fa-newspaper" required>
+              </div>
+              <div class="col-5">
+                <label class="form-label small fw-bold">Status Aktif</label>
+                <select id="fmtStatusAktif" class="form-select">
+                  <option value="Aktif">Aktif</option>
+                  <option value="Nonaktif">Nonaktif</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer bg-light">
+            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Batal</button>
+            <button type="submit" class="btn btn-sm btn-rri-primary fw-bold px-3">Simpan Format</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Modal Form Data Reporter (Super Admin) -->
+  <div class="modal fade" id="modalReporter" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content glass-modal border-0 shadow-lg">
+        <div class="modal-header bg-rri-deep text-white">
+          <h6 class="modal-title fw-bold" id="modalReporterTitle">Tambah Data Reporter</h6>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="formModalReporter" onsubmit="submitModalReporter(event)">
+          <div class="modal-body p-4">
+            <input type="hidden" id="repIdReporter">
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Nama Lengkap Reporter &amp; Gelar <span class="text-danger">*</span></label>
+              <input type="text" id="repNamaReporter" class="form-control" placeholder="Contoh: Rina Marlina, S.I.Kom" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-bold">NIP / Nomor Identitas Pegawai</label>
+              <input type="text" id="repNipId" class="form-control" placeholder="Contoh: 19920411 202012 2 003">
+            </div>
+            <div class="row g-2">
+              <div class="col-7">
+                <label class="form-label small fw-bold">Jabatan Fungsional / Tugas</label>
+                <input type="text" id="repJabatan" class="form-control" placeholder="Reporter / Pranata Siaran" value="Reporter" required>
+              </div>
+              <div class="col-5">
+                <label class="form-label small fw-bold">Status Aktif</label>
+                <select id="repStatusAktif" class="form-select">
+                  <option value="Aktif">Aktif</option>
+                  <option value="Nonaktif">Nonaktif</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer bg-light">
+            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Batal</button>
+            <button type="submit" class="btn btn-sm btn-rri-primary fw-bold px-3">Simpan Reporter</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Modal Form Akun Pengguna (Super Admin) -->
+  <div class="modal fade" id="modalUserAccount" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content glass-modal border-0 shadow-lg">
+        <div class="modal-header bg-rri-deep text-white">
+          <h6 class="modal-title fw-bold" id="modalUserTitle">Tambah Akun Pengguna</h6>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="formModalUser" onsubmit="submitModalUser(event)">
+          <div class="modal-body p-4">
+            <input type="hidden" id="usrMode" value="ADD">
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Username Login <span class="text-danger">*</span></label>
+              <input type="text" id="usrUsername" class="form-control" placeholder="Tanpa spasi, contoh: ahmad_rri" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Nama Lengkap Pengguna <span class="text-danger">*</span></label>
+              <input type="text" id="usrNamaLengkap" class="form-control" placeholder="Nama lengkap pengguna..." required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-bold" id="usrPasswordLabel">Password <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <input type="password" id="usrPassword" class="form-control password-masked" placeholder="••••••••">
+                <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('usrPassword', 'usrPassIcon')">
+                  <i id="usrPassIcon" class="fa-solid fa-eye"></i>
+                </button>
+              </div>
+              <small class="text-muted x-small" id="usrPasswordHint">Akan dienkripsi otomatis dengan SHA-256</small>
+            </div>
+            <div class="row g-2">
+              <div class="col-6">
+                <label class="form-label small fw-bold">Role Hak Akses</label>
+                <select id="usrRole" class="form-select">
+                  <option value="User">User (Reporter/Broadcaster)</option>
+                  <option value="Super Admin">Super Admin</option>
+                </select>
+              </div>
+              <div class="col-6">
+                <label class="form-label small fw-bold">Status Akun</label>
+                <select id="usrStatusAkun" class="form-select">
+                  <option value="Aktif">Aktif</option>
+                  <option value="Nonaktif">Nonaktif</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer bg-light">
+            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Batal</button>
+            <button type="submit" class="btn btn-sm btn-rri-primary fw-bold px-3">Simpan Akun</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Modal Ubah Password Pribadi -->
+  <div class="modal fade" id="modalChangeOwnPass" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content glass-modal border-0 shadow-lg">
+        <div class="modal-header bg-rri-deep text-white">
+          <h6 class="modal-title fw-bold"><i class="fa-solid fa-key me-1"></i> Ubah Kata Sandi</h6>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="formChangeOwnPass" onsubmit="submitChangeOwnPassword(event)">
+          <div class="modal-body p-4">
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Kata Sandi Lama</label>
+              <input type="password" id="ownOldPassword" class="form-control password-masked" placeholder="••••••••" required>
+            </div>
+            <div class="mb-2">
+              <label class="form-label small fw-bold">Kata Sandi Baru</label>
+              <input type="password" id="ownNewPassword" class="form-control password-masked" placeholder="••••••••" required>
+            </div>
+          </div>
+          <div class="modal-footer bg-light">
+            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Batal</button>
+            <button type="submit" class="btn btn-sm btn-rri-primary fw-bold">Perbarui Sandi</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap 5.3 Bundle JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Logika Frontend SPA & Komunikasi google.script.run -->
+  <?!= include('JavaScript'); ?>
+</body>
+</html>

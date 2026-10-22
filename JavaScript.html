@@ -1,0 +1,1616 @@
+<script>
+  /**
+   * ============================================================================
+   * LOGO RESMI SiPeKA (GAMBAR 3 TANPA DIUBAH - PRESISI 100%)
+   * ============================================================================
+   */
+  const SIPEKA_LOGO_SVG_RAW = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 245" width="100%" height="100%">
+    <defs>
+      <linearGradient id="sipekaTextGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#0568F5"/>
+        <stop offset="100%" stop-color="#002D7A"/>
+      </linearGradient>
+      <linearGradient id="docFrameGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#0666F2"/>
+        <stop offset="100%" stop-color="#003182"/>
+      </linearGradient>
+      <linearGradient id="bar1Grad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#5AA9FF"/>
+        <stop offset="100%" stop-color="#8EC5FF"/>
+      </linearGradient>
+      <linearGradient id="bar2Grad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#277BF5"/>
+        <stop offset="100%" stop-color="#76B5FF"/>
+      </linearGradient>
+    </defs>
+    <rect width="960" height="245" rx="14" fill="#FFFFFF"/>
+    <!-- Ikon Dokumen & Grafik Kinerja -->
+    <g transform="translate(88, 22)">
+      <!-- Kerangka Dokumen Sudut Membulat -->
+      <path d="M 38 110 L 38 30 Q 38 14 54 14 L 112 14 L 112 25 L 54 25 Q 49 25 49 30 L 49 110 Z" fill="url(#docFrameGrad)"/>
+      <path d="M 52 184 L 132 184 Q 148 184 148 168 L 148 106 L 137 106 L 137 168 Q 137 173 132 173 L 52 173 Z" fill="url(#docFrameGrad)"/>
+      <!-- Lipatan Kertas Kanan Atas -->
+      <path d="M 116 14 L 154 52 L 126 52 Q 116 52 116 42 Z" fill="#4CA1FF"/>
+      <path d="M 139 58 L 148 52 L 148 62 Z" fill="#0558D6"/>
+      <!-- 2 Batang Diagram (Bar Chart) -->
+      <rect x="75" y="122" width="18" height="42" fill="url(#bar1Grad)"/>
+      <rect x="103" y="114" width="18" height="50" fill="url(#bar2Grad)"/>
+      <!-- Grafik Garis (Line Chart) 4 Titik -->
+      <polyline points="62,115 86,87 112,92 147,68" fill="none" stroke="#0866F2" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="62" cy="115" r="9.5" fill="#0866F2"/>
+      <circle cx="86" cy="87" r="9.5" fill="#0866F2"/>
+      <circle cx="112" cy="92" r="7" fill="#0866F2"/>
+      <circle cx="147" cy="68" r="9.5" fill="#0866F2"/>
+      <!-- Simbol Jejaring (Share/Network Nodes) Kiri Bawah -->
+      <line x1="25" y1="138" x2="49" y2="156" stroke="#0866F2" stroke-width="6" stroke-linecap="round"/>
+      <line x1="49" y1="156" x2="29" y2="180" stroke="#0866F2" stroke-width="6" stroke-linecap="round"/>
+      <circle cx="25" cy="138" r="11" fill="#0866F2"/>
+      <circle cx="49" cy="156" r="13.5" fill="#0866F2"/>
+      <circle cx="29" cy="180" r="11" fill="#0866F2"/>
+    </g>
+    <!-- Tipografi Utama SiPeKA -->
+    <text x="275" y="142" font-family="'Plus Jakarta Sans', 'Inter', Arial, sans-serif" font-weight="800" font-size="136" fill="url(#sipekaTextGrad)" letter-spacing="-1">SiPeKA</text>
+    <!-- Subjudul -->
+    <text x="282" y="180" font-family="'Plus Jakarta Sans', 'Inter', Arial, sans-serif" font-weight="700" font-size="25.5" fill="#374151" letter-spacing="0.2">Sistem Informasi Pelaporan Kinerja dan Administrasi</text>
+    <!-- Garis Biru & Teks RRI Jambi -->
+    <line x1="282" y1="204" x2="758" y2="204" stroke="#0866F2" stroke-width="3.2"/>
+    <text x="774" y="212" font-family="'Plus Jakarta Sans', 'Inter', Arial, sans-serif" font-weight="800" font-size="27" fill="#0866F2">RRI Jambi</text>
+  </svg>`;
+
+  const SIPEKA_LOGO_DATA_URI = 'data:image/svg+xml;utf8,' + encodeURIComponent(SIPEKA_LOGO_SVG_RAW);
+
+  /**
+   * ============================================================================
+   * STATE GLOBAL FRONTEND (SINGLE PAGE APPLICATION)
+   * ============================================================================
+   */
+  const STORAGE_TOKEN_KEY = 'SIPEKA_BERITA_RRI_SESSION_TOKEN';
+
+  const AppState = {
+    token: null,
+    user: null,
+    config: {
+      Nama_Stasiun: 'LPP RRI Jambi',
+      Sub_Judul_Aplikasi: 'Sistem Informasi Pelaporan Kinerja dan Administrasi',
+      Nama_Pejabat_Tanda_Tangan: 'Ketua Tim Pemberitaan',
+      NIP_Pejabat: '-',
+      Kota_Stasiun: 'Jambi',
+      Status_Maintenance: 'TIDAK'
+    },
+    reporters: [],
+    formats: [],
+    berita: [],
+    users: [],
+    logs: [],
+    filteredRekap: [],
+    currentView: 'dashboard',
+    selectedFormatId: '',
+    dialogSubmenuOpen: false,
+    confirmCallback: null
+  };
+
+  /**
+   * ============================================================================
+   * INISIALISASI SAAT HALAMAN DIBUKA
+   * ============================================================================
+   */
+  document.addEventListener('DOMContentLoaded', function() {
+    renderOfficialSipekaLogos();
+    initYearDropdowns();
+    setDefaultFilterDates();
+
+    const savedToken = localStorage.getItem(STORAGE_TOKEN_KEY);
+    if (savedToken) {
+      showGlobalLoader('Memulihkan Sesi Login...', 'Memverifikasi token keamanan SiPeKA RRI');
+      google.script.run
+        .withSuccessHandler(function(res) {
+          hideGlobalLoader();
+          if (res && res.status === 'success') {
+            applySessionAndBootstrap(res.session, res.bootstrap);
+          } else {
+            localStorage.removeItem(STORAGE_TOKEN_KEY);
+            if (res && res.config) {
+              AppState.config = res.config;
+              applyPublicBranding();
+            }
+            showLoginScreen();
+          }
+        })
+        .withFailureHandler(function(err) {
+          hideGlobalLoader();
+          showLoginScreen();
+          showCustomToast('Gagal terhubung ke server: ' + err.message, 'error');
+        })
+        .validateSessionAndBootstrap(savedToken);
+    } else {
+      google.script.run
+        .withSuccessHandler(function(cfg) {
+          hideGlobalLoader();
+          if (cfg) {
+            AppState.config = cfg;
+            applyPublicBranding();
+          }
+          showLoginScreen();
+        })
+        .withFailureHandler(function() {
+          hideGlobalLoader();
+          showLoginScreen();
+        })
+        .getPublicConfig();
+    }
+  });
+
+  function renderOfficialSipekaLogos() {
+    document.querySelectorAll('.sipeka-logo-render').forEach(function(imgEl) {
+      imgEl.src = SIPEKA_LOGO_DATA_URI;
+    });
+  }
+
+  function initYearDropdowns() {
+    const currentYear = new Date().getFullYear();
+    const years = [currentYear - 1, currentYear, currentYear + 1];
+    const dashYearEl = document.getElementById('dashFilterYear');
+    const rekapYearEl = document.getElementById('rekapTahun');
+    if (dashYearEl) {
+      dashYearEl.innerHTML = years.map(y => `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y}</option>`).join('');
+    }
+    if (rekapYearEl) {
+      rekapYearEl.innerHTML = years.map(y => `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y}</option>`).join('');
+    }
+    const currentMonth = new Date().getMonth() + 1;
+    const dashMonthEl = document.getElementById('dashFilterMonth');
+    const rekapMonthEl = document.getElementById('rekapBulan');
+    if (dashMonthEl) dashMonthEl.value = String(currentMonth);
+    if (rekapMonthEl) rekapMonthEl.value = String(currentMonth);
+  }
+
+  function setDefaultFilterDates() {
+    const todayStr = getTodayYMD();
+    const firstDayStr = todayStr.substring(0, 8) + '01';
+    const elInputTgl = document.getElementById('inputTanggalSiar');
+    const elRekapHarian = document.getElementById('rekapTanggalHarian');
+    const elRekapAwal = document.getElementById('rekapTanggalAwal');
+    const elRekapAkhir = document.getElementById('rekapTanggalAkhir');
+    if (elInputTgl) elInputTgl.value = todayStr;
+    if (elRekapHarian) elRekapHarian.value = todayStr;
+    if (elRekapAwal) elRekapAwal.value = firstDayStr;
+    if (elRekapAkhir) elRekapAkhir.value = todayStr;
+  }
+
+  function getTodayYMD() {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  /**
+   * ============================================================================
+   * SISTEM NOTIFIKASI TOAST & MODAL KONFIRMASI KUSTOM (TANPA ALERT BROWSER)
+   * ============================================================================
+   */
+  function showCustomToast(message, type = 'info') {
+    const container = document.getElementById('customToastContainer');
+    if (!container) return;
+
+    const toastEl = document.createElement('div');
+    let iconClass = 'fa-circle-info text-rri-cyan';
+    let borderClass = 'toast-info';
+    if (type === 'success') {
+      iconClass = 'fa-circle-check text-success';
+      borderClass = 'toast-success';
+    } else if (type === 'error') {
+      iconClass = 'fa-circle-xmark text-danger';
+      borderClass = 'toast-error';
+    } else if (type === 'warning') {
+      iconClass = 'fa-triangle-exclamation text-warning';
+      borderClass = 'toast-warning';
+    }
+
+    toastEl.className = `rri-toast ${borderClass}`;
+    toastEl.innerHTML = `
+      <i class="fa-solid ${iconClass} fs-5"></i>
+      <div class="flex-grow-1 small fw-semibold text-dark">${escapeHtml(message)}</div>
+      <button type="button" class="btn-close btn-sm" onclick="this.parentElement.remove()"></button>
+    `;
+    container.appendChild(toastEl);
+
+    setTimeout(function() {
+      if (toastEl && toastEl.parentElement) {
+        toastEl.remove();
+      }
+    }, 4000);
+  }
+
+  function openCustomConfirm(title, message, onConfirmCallback, btnText = 'Ya, Lanjutkan', isDanger = true) {
+    document.getElementById('confirmModalTitle').innerText = title;
+    document.getElementById('confirmModalMessage').innerText = message;
+    const btnYes = document.getElementById('btnConfirmModalYes');
+    btnYes.innerText = btnText;
+    btnYes.className = isDanger
+      ? 'btn btn-sm btn-danger flex-grow-1 py-2 fw-bold'
+      : 'btn btn-sm btn-rri-primary flex-grow-1 py-2 fw-bold';
+
+    AppState.confirmCallback = onConfirmCallback;
+    const modalEl = document.getElementById('customConfirmModal');
+    const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    bsModal.show();
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const btnYes = document.getElementById('btnConfirmModalYes');
+    if (btnYes) {
+      btnYes.addEventListener('click', function() {
+        const modalEl = document.getElementById('customConfirmModal');
+        const bsModal = bootstrap.Modal.getInstance(modalEl);
+        if (bsModal) bsModal.hide();
+        if (typeof AppState.confirmCallback === 'function') {
+          const cb = AppState.confirmCallback;
+          AppState.confirmCallback = null;
+          cb();
+        }
+      });
+    }
+  });
+
+  function showGlobalLoader(title, subtitle) {
+    document.getElementById('loaderTitle').innerText = title || 'Memproses Data...';
+    document.getElementById('loaderSubtitle').innerText = subtitle || 'Mohon tunggu sebentar';
+    document.getElementById('globalLoader').classList.remove('d-none');
+  }
+
+  function hideGlobalLoader() {
+    document.getElementById('globalLoader').classList.add('d-none');
+  }
+
+  function togglePasswordVisibility(inputId, iconId) {
+    const inputEl = document.getElementById(inputId);
+    const iconEl = document.getElementById(iconId);
+    if (!inputEl) return;
+    if (inputEl.type === 'password') {
+      inputEl.type = 'text';
+      if (iconEl) iconEl.className = 'fa-solid fa-eye-slash';
+    } else {
+      inputEl.type = 'password';
+      if (iconEl) iconEl.className = 'fa-solid fa-eye';
+    }
+  }
+
+  function escapeHtml(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  /**
+   * ============================================================================
+   * AUTENTIKASI LOGIN & MANAJEMEN SESI
+   * ============================================================================
+   */
+  function showLoginScreen() {
+    document.getElementById('appWrapper').classList.add('d-none');
+    document.getElementById('loginView').classList.remove('d-none');
+  }
+
+  function handleLoginSubmit(e) {
+    e.preventDefault();
+    const u = document.getElementById('loginUsername').value.trim();
+    const p = document.getElementById('loginPassword').value;
+    if (!u || !p) {
+      showCustomToast('Username dan kata sandi wajib diisi!', 'warning');
+      return;
+    }
+
+    const btn = document.getElementById('btnSubmitLogin');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> MEMVERIFIKASI AKUN...';
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-right-to-bracket me-2"></i> MASUK KE SISTEM';
+        if (res && res.status === 'success') {
+          localStorage.setItem(STORAGE_TOKEN_KEY, res.session.token);
+          document.getElementById('loginForm').reset();
+          applySessionAndBootstrap(res.session, res.bootstrap);
+          showCustomToast('Selamat datang, ' + res.session.namaLengkap + '!', 'success');
+        } else {
+          showCustomToast((res && res.message) || 'Gagal login.', 'error');
+        }
+      })
+      .withFailureHandler(function(err) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-right-to-bracket me-2"></i> MASUK KE SISTEM';
+        showCustomToast('Kesalahan jaringan: ' + err.message, 'error');
+      })
+      .loginUser(u, p);
+  }
+
+  function applySessionAndBootstrap(session, bootstrapData) {
+    AppState.token = session.token;
+    AppState.user = {
+      username: session.username,
+      namaLengkap: session.namaLengkap,
+      role: session.role
+    };
+
+    if (bootstrapData) {
+      AppState.config = bootstrapData.config || AppState.config;
+      AppState.reporters = bootstrapData.reporters || [];
+      AppState.formats = bootstrapData.formats || [];
+      AppState.berita = bootstrapData.berita || [];
+      AppState.users = bootstrapData.users || [];
+      AppState.logs = bootstrapData.logs || [];
+    }
+
+    applyPublicBranding();
+    document.getElementById('sidebarUserFullName').innerText = AppState.user.namaLengkap;
+    document.getElementById('sidebarUsername').innerText = '@' + AppState.user.username;
+    document.getElementById('sidebarUserRoleBadge').innerText = AppState.user.role;
+    document.getElementById('sidebarAvatarInitial').innerText = AppState.user.namaLengkap.charAt(0).toUpperCase();
+
+    const isSuperAdmin = AppState.user.role === 'Super Admin';
+    document.getElementById('superAdminNavGroup').classList.toggle('d-none', !isSuperAdmin);
+    document.getElementById('mob-cpanel').classList.toggle('d-none', !isSuperAdmin);
+
+    renderSidebarFormatShortcuts();
+    populateFormDropdowns();
+    populateRekapFilterDropdowns();
+    renderDashboardView();
+    renderMyRecentInputs();
+    applyMultiDimensionalFilter();
+
+    if (isSuperAdmin) {
+      renderAllCPanelTables();
+    }
+
+    document.getElementById('loginView').classList.add('d-none');
+    document.getElementById('appWrapper').classList.remove('d-none');
+    navigateToView('dashboard');
+  }
+
+  function applyPublicBranding() {
+    const stName = AppState.config.Nama_Stasiun || 'LPP RRI Jambi';
+    const subTitle = AppState.config.Sub_Judul_Aplikasi || 'Sistem Informasi Pelaporan Kinerja dan Administrasi';
+    document.getElementById('loginStationName').innerText = stName;
+    document.getElementById('loginAppSubtitle').innerText = subTitle;
+    document.getElementById('sidebarStationName').innerText = stName;
+    document.getElementById('topbarStationBadge').innerText = stName;
+    document.getElementById('topbarSubtitle').innerText = subTitle;
+    document.getElementById('dashGreetingTitle').innerText = 'Selamat Bertugas di Newsroom ' + stName + '!';
+  }
+
+  function confirmLogout() {
+    openCustomConfirm(
+      'Keluar dari Sistem?',
+      'Sesi login Anda akan diakhiri pada perangkat ini.',
+      function() {
+        localStorage.removeItem(STORAGE_TOKEN_KEY);
+        AppState.token = null;
+        AppState.user = null;
+        showLoginScreen();
+        showCustomToast('Anda telah berhasil keluar.', 'info');
+      },
+      'Ya, Keluar',
+      true
+    );
+  }
+
+  function refreshAllServerData() {
+    if (!AppState.token) return;
+    showGlobalLoader('Menyinkronkan Data...', 'Mengambil pembaruan terbaru dari Google Sheets');
+    google.script.run
+      .withSuccessHandler(function(res) {
+        hideGlobalLoader();
+        if (res && res.status === 'success') {
+          applySessionAndBootstrap(res.session, res.bootstrap);
+          showCustomToast('Data berhasil disinkronkan!', 'success');
+        } else {
+          showLoginScreen();
+        }
+      })
+      .withFailureHandler(function(err) {
+        hideGlobalLoader();
+        showCustomToast('Gagal sinkronisasi: ' + err.message, 'error');
+      })
+      .validateSessionAndBootstrap(AppState.token);
+  }
+
+  /**
+   * ============================================================================
+   * NAVIGASI SINGLE PAGE APPLICATION (SPA) & SUBMENU DIALOG (GAMBAR 2)
+   * ============================================================================
+   */
+  function navigateToView(viewName, preselectFormatId) {
+    if (viewName === 'cpanel' && (!AppState.user || AppState.user.role !== 'Super Admin')) {
+      showCustomToast('Akses ditolak: Menu ini khusus Super Admin.', 'error');
+      return;
+    }
+
+    AppState.currentView = viewName;
+    document.querySelectorAll('.spa-view').forEach(el => el.classList.add('d-none'));
+    const targetSection = document.getElementById('view-' + viewName);
+    if (targetSection) targetSection.classList.remove('d-none');
+
+    ['dashboard', 'input', 'rekap', 'cpanel'].forEach(v => {
+      const navEl = document.getElementById('nav-' + v);
+      const mobEl = document.getElementById('mob-' + v);
+      if (navEl) navEl.classList.toggle('active', v === viewName);
+      if (mobEl) mobEl.classList.toggle('active', v === viewName);
+    });
+
+    const titles = {
+      dashboard: 'Dashboard Ringkasan Kinerja',
+      input: 'Form Input Laporan Berita & Program',
+      rekap: 'Rekapitulasi Multi-Dimensi & Cetak PDF',
+      cpanel: 'Control Panel Sistem (Super Admin)'
+    };
+    document.getElementById('topbarPageTitle').innerText = titles[viewName] || 'SiPeKA BERITA RRI';
+
+    if (viewName === 'input' && preselectFormatId) {
+      AppState.selectedFormatId = preselectFormatId;
+      const selectFmt = document.getElementById('inputIdFormat');
+      if (selectFmt) {
+        selectFmt.value = preselectFormatId;
+        handleFormatAcaraChange();
+      }
+      // Highlight submenu jika yang dipilih adalah Dialog
+      document.querySelectorAll('.sidebar-sublink').forEach(el => {
+        el.classList.toggle('active-sub', el.getAttribute('data-fmt-id') === preselectFormatId);
+      });
+    }
+
+    toggleMobileSidebar(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function toggleMobileSidebar(show) {
+    const sb = document.getElementById('appSidebar');
+    const bd = document.getElementById('sidebarBackdrop');
+    if (show) {
+      sb.classList.add('show-mobile');
+      bd.classList.remove('d-none');
+    } else {
+      sb.classList.remove('show-mobile');
+      bd.classList.add('d-none');
+    }
+  }
+
+  /**
+   * Merender Pintasan Format Acara di Sidebar:
+   * Menggabungkan seluruh format "Dialog" (1. Dialog Pagi, 2. Dialog Kentongan)
+   * ke dalam 1 menu induk "Dialog" yang saat diklik akan menampilkan sub-menu berikutnya.
+   */
+  function renderSidebarFormatShortcuts() {
+    const activeFormats = AppState.formats.filter(f => f.statusAktif === 'Aktif');
+    document.getElementById('sidebarFormatCount').innerText = activeFormats.length;
+
+    const dialogFormats = activeFormats.filter(f => f.namaFormat.toLowerCase().includes('dialog'));
+    const ul = document.getElementById('sidebarFormatShortcuts');
+    let htmlItems = '';
+    let dialogGroupRendered = false;
+
+    activeFormats.forEach(function(f) {
+      const isDialogItem = f.namaFormat.toLowerCase().includes('dialog');
+      if (isDialogItem) {
+        if (!dialogGroupRendered) {
+          dialogGroupRendered = true;
+          const subLinksHtml = dialogFormats.map((df, idx) => `
+            <li>
+              <a href="javascript:void(0)" class="sidebar-sublink ${AppState.selectedFormatId === df.idFormat ? 'active-sub' : ''}" data-fmt-id="${escapeHtml(df.idFormat)}" onclick="navigateToView('input', '${escapeHtml(df.idFormat)}')">
+                <span class="badge bg-rri-cyan text-white x-small">${idx + 1}</span>
+                <span class="text-truncate">${escapeHtml(df.namaFormat)}</span>
+              </a>
+            </li>
+          `).join('');
+
+          htmlItems += `
+            <li class="nav-item">
+              <a href="javascript:void(0)" class="sidebar-link sidebar-parent-dialog py-2" onclick="toggleDialogSubmenu()">
+                <i class="fa-solid fa-comments menu-main-icon"></i>
+                <span class="text-truncate">Dialog</span>
+                <i class="fa-solid fa-chevron-down submenu-chevron ${AppState.dialogSubmenuOpen ? 'rotated' : ''}" id="dialogSubmenuChevron"></i>
+              </a>
+              <ul class="sidebar-submenu ${AppState.dialogSubmenuOpen ? '' : 'd-none'}" id="dialogSubmenuList">
+                ${subLinksHtml}
+              </ul>
+            </li>
+          `;
+        }
+      } else {
+        htmlItems += `
+          <li class="nav-item">
+            <a href="javascript:void(0)" class="sidebar-link py-1.5" onclick="navigateToView('input', '${escapeHtml(f.idFormat)}')">
+              <i class="fa-solid ${escapeHtml(f.ikonFA || 'fa-tower-broadcast')} menu-main-icon"></i>
+              <span class="text-truncate">${escapeHtml(f.namaFormat)}</span>
+            </a>
+          </li>
+        `;
+      }
+    });
+
+    ul.innerHTML = htmlItems;
+  }
+
+  function toggleDialogSubmenu() {
+    AppState.dialogSubmenuOpen = !AppState.dialogSubmenuOpen;
+    const subList = document.getElementById('dialogSubmenuList');
+    const chevron = document.getElementById('dialogSubmenuChevron');
+    if (subList) {
+      subList.classList.toggle('d-none', !AppState.dialogSubmenuOpen);
+    }
+    if (chevron) {
+      chevron.classList.toggle('rotated', AppState.dialogSubmenuOpen);
+    }
+  }
+
+  /**
+   * ============================================================================
+   * VIEW 1: RENDER DASHBOARD RINGKASAN KINERJA
+   * ============================================================================
+   */
+  function renderDashboardView() {
+    const selMonth = document.getElementById('dashFilterMonth').value;
+    const selYear = parseInt(document.getElementById('dashFilterYear').value, 10);
+    const todayStr = getTodayYMD();
+
+    const periodBerita = AppState.berita.filter(item => {
+      if (!item.tanggalSiar) return false;
+      const parts = item.tanggalSiar.split('-');
+      const y = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10);
+      if (y !== selYear) return false;
+      if (selMonth !== 'ALL' && m !== parseInt(selMonth, 10)) return false;
+      return true;
+    });
+
+    const todayCount = AppState.berita.filter(b => b.tanggalSiar === todayStr).length;
+    const activeReporters = AppState.reporters.filter(r => r.statusAktif === 'Aktif');
+    const activeFormats = AppState.formats.filter(f => f.statusAktif === 'Aktif');
+
+    document.getElementById('kpiTotalPeriode').innerText = periodBerita.length;
+    document.getElementById('kpiTotalHariIni').innerText = todayCount;
+    document.getElementById('kpiDateTodayLabel').innerText = 'Tanggal: ' + todayStr;
+    document.getElementById('kpiActiveReporters').innerText = activeReporters.length;
+    document.getElementById('kpiActiveFormats').innerText = activeFormats.length;
+
+    // 1. Breakdown per Format Acara
+    const totalCount = periodBerita.length || 1;
+    const formatContainer = document.getElementById('dashFormatBreakdown');
+    formatContainer.innerHTML = activeFormats.map(f => {
+      const count = periodBerita.filter(b => b.idFormat === f.idFormat || b.namaFormat === f.namaFormat).length;
+      const pct = Math.min(100, Math.round((count / totalCount) * 100));
+      return `
+        <div class="p-2.5 rounded-3 border bg-white hover-shadow" style="cursor:pointer;" onclick="navigateToView('input', '${escapeHtml(f.idFormat)}')">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <div class="d-flex align-items-center gap-2">
+              <i class="fa-solid ${escapeHtml(f.ikonFA)} text-rri-cyan"></i>
+              <span class="fw-bold small text-rri-deep">${escapeHtml(f.namaFormat)}</span>
+            </div>
+            <span class="badge bg-rri-deep rounded-pill">${count} Laporan</span>
+          </div>
+          <div class="progress" style="height: 6px;">
+            <div class="progress-bar bg-rri-cyan" role="progressbar" style="width: ${count > 0 ? Math.max(pct, 6) : 0}%"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // 2. Matriks Produktivitas Reporter berdasarkan 4 Kategori (Umum, RB Tematik, Prioritas Nasional, Astacita)
+    const matrixMap = {};
+    activeReporters.forEach(r => {
+      matrixMap[r.namaReporter] = { Umum: 0, RBTematik: 0, PrioritasNasional: 0, Astacita: 0, total: 0 };
+    });
+    periodBerita.forEach(b => {
+      if (!matrixMap[b.namaReporter]) {
+        matrixMap[b.namaReporter] = { Umum: 0, RBTematik: 0, PrioritasNasional: 0, Astacita: 0, total: 0 };
+      }
+      const row = matrixMap[b.namaReporter];
+      const kat = String(b.jenisLaporan || 'Umum').trim();
+      if (kat === 'RB Tematik') row.RBTematik++;
+      else if (kat === 'Prioritas Nasional') row.PrioritasNasional++;
+      else if (kat === 'Astacita') row.Astacita++;
+      else row.Umum++;
+      row.total++;
+    });
+
+    const sortedReporters = Object.keys(matrixMap).sort((a, b) => matrixMap[b].total - matrixMap[a].total);
+    const matrixBody = document.getElementById('dashReporterMatrixBody');
+    if (sortedReporters.length === 0) {
+      matrixBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Belum ada data reporter.</td></tr>';
+    } else {
+      matrixBody.innerHTML = sortedReporters.map((repName, idx) => {
+        const s = matrixMap[repName];
+        return `
+          <tr>
+            <td>${idx + 1}</td>
+            <td class="fw-semibold text-rri-deep">${escapeHtml(repName)}</td>
+            <td class="text-center">${s.Umum || '-'}</td>
+            <td class="text-center">${s.RBTematik || '-'}</td>
+            <td class="text-center">${s.PrioritasNasional || '-'}</td>
+            <td class="text-center">${s.Astacita || '-'}</td>
+            <td class="text-center"><span class="badge bg-rri-deep">${s.total}</span></td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // 3. Tabel 10 Berita Terbaru
+    const recent10 = periodBerita.slice(0, 10);
+    const recentBody = document.getElementById('dashRecentBeritaBody');
+    if (recent10.length === 0) {
+      recentBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Belum ada laporan berita pada periode ini.</td></tr>';
+    } else {
+      recentBody.innerHTML = recent10.map(item => {
+        const canModify = canUserModifyBerita(item);
+        return `
+          <tr>
+            <td class="text-nowrap fw-semibold">${escapeHtml(item.tanggalSiar)}</td>
+            <td><span class="badge bg-rri-cyan-soft text-rri-deep">${escapeHtml(item.namaFormat)}</span></td>
+            <td class="fw-semibold">${escapeHtml(item.namaReporter)}</td>
+            <td>
+              <div class="fw-bold text-rri-deep">${escapeHtml(item.judulBeritaTopik)}</div>
+              ${item.keteranganTambahan && item.keteranganTambahan !== '-' ? `<div class="x-small text-muted">${escapeHtml(item.keteranganTambahan)}</div>` : ''}
+            </td>
+            <td class="small">${escapeHtml(item.narasumberJabatan)}</td>
+            <td class="text-center"><span class="badge bg-secondary">${escapeHtml(item.jenisLaporan || 'Umum')}</span></td>
+            <td class="text-center text-nowrap">
+              ${canModify ? `
+                <button class="btn btn-xs btn-outline-primary me-1" onclick="startEditBerita('${escapeHtml(item.idBerita)}')" title="Edit Laporan">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+                <button class="btn btn-xs btn-outline-danger" onclick="confirmDeleteBerita('${escapeHtml(item.idBerita)}')" title="Hapus Laporan">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              ` : '<span class="text-muted x-small"><i class="fa-solid fa-lock"></i></span>'}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+  }
+
+  function canUserModifyBerita(beritaItem) {
+    if (!AppState.user) return false;
+    if (AppState.user.role === 'Super Admin') return true;
+    return String(beritaItem.penginputUser || '').toLowerCase() === String(AppState.user.username || '').toLowerCase();
+  }
+
+  /**
+   * ============================================================================
+   * VIEW 2: FORM INPUT LAPORAN DINAMIS KHAS BROADCASTER RRI
+   * ============================================================================
+   */
+  function populateFormDropdowns() {
+    const activeFormats = AppState.formats.filter(f => f.statusAktif === 'Aktif');
+    const selectFmt = document.getElementById('inputIdFormat');
+    selectFmt.innerHTML = activeFormats.map(f =>
+      `<option value="${escapeHtml(f.idFormat)}">${escapeHtml(f.namaFormat)}</option>`
+    ).join('');
+
+    const activeReporters = AppState.reporters.filter(r => r.statusAktif === 'Aktif');
+    const selectRep = document.getElementById('inputNamaReporter');
+    selectRep.innerHTML = '<option value="">-- Pilih Nama Reporter --</option>' +
+      activeReporters.map(r =>
+        `<option value="${escapeHtml(r.namaReporter)}">${escapeHtml(r.namaReporter)} (${escapeHtml(r.jabatan)})</option>`
+      ).join('');
+
+    handleFormatAcaraChange();
+  }
+
+  function handleFormatAcaraChange() {
+    const idFormat = document.getElementById('inputIdFormat').value;
+    AppState.selectedFormatId = idFormat;
+    const fmtObj = AppState.formats.find(f => f.idFormat === idFormat) || {
+      namaFormat: 'Laporan Berita',
+      kategoriForm: 'STANDAR',
+      ikonFA: 'fa-microphone-lines'
+    };
+
+    document.getElementById('dynamicFormIcon').className = 'fa-solid ' + (fmtObj.ikonFA || 'fa-microphone-lines');
+    const isEditing = Boolean(document.getElementById('inputIdBerita').value);
+    document.getElementById('dynamicFormTitle').innerText = (isEditing ? 'Edit Laporan: ' : 'Input Laporan: ') + fmtObj.namaFormat;
+    document.getElementById('dynamicFormCategoryBadge').innerText = 'FORMAT ACARA: ' + fmtObj.namaFormat.toUpperCase();
+
+    const namaUpper = fmtObj.namaFormat.toUpperCase();
+    const isMultiNara = fmtObj.kategoriForm === 'MULTI_NARA' ||
+                        namaUpper.includes('DIALOG') ||
+                        namaUpper.includes('INDEPT') ||
+                        namaUpper.includes('INDEPTH') ||
+                        namaUpper.includes('DOKUMENTER');
+
+    const isKBRN = fmtObj.kategoriForm === 'KBRN' || namaUpper.includes('KBRN');
+
+    document.getElementById('singleNarasumberWrapper').classList.toggle('d-none', isMultiNara);
+    document.getElementById('multiNarasumberWrapper').classList.toggle('d-none', !isMultiNara);
+
+    const labelJudul = document.getElementById('labelJudulBerita');
+    if (isMultiNara) {
+      labelJudul.innerHTML = '<i class="fa-solid fa-comments me-1 text-rri-cyan"></i> Topik Dialog / Judul Produksi <span class="text-danger">*</span>';
+    } else if (isKBRN) {
+      labelJudul.innerHTML = '<i class="fa-solid fa-globe me-1 text-rri-cyan"></i> Judul Berita Online Portal KBRN <span class="text-danger">*</span>';
+    } else {
+      labelJudul.innerHTML = '<i class="fa-solid fa-heading me-1 text-rri-cyan"></i> Judul Berita / Topik Siaran <span class="text-danger">*</span>';
+    }
+  }
+
+  function buildNarasumberStringFromForm() {
+    const isMulti = !document.getElementById('multiNarasumberWrapper').classList.contains('d-none');
+    if (isMulti) {
+      const pairs = [];
+      for (let i = 1; i <= 4; i++) {
+        const nm = document.getElementById('multiNaraNama' + i).value.trim();
+        const jb = document.getElementById('multiNaraJab' + i).value.trim();
+        if (nm) {
+          pairs.push(jb ? `${nm} (${jb})` : nm);
+        }
+      }
+      return pairs.length > 0 ? pairs.join(' | ') : '-';
+    } else {
+      const nm = document.getElementById('singleNaraNama').value.trim();
+      const jb = document.getElementById('singleNaraJabatan').value.trim();
+      if (!nm && !jb) return '-';
+      if (nm && jb) return `${nm} (${jb})`;
+      return nm || jb;
+    }
+  }
+
+  function populateNarasumberFieldsForEdit(narasumberStr) {
+    document.getElementById('singleNaraNama').value = '';
+    document.getElementById('singleNaraJabatan').value = '';
+    for (let i = 1; i <= 4; i++) {
+      document.getElementById('multiNaraNama' + i).value = '';
+      document.getElementById('multiNaraJab' + i).value = '';
+    }
+
+    if (!narasumberStr || narasumberStr === '-') return;
+    const isMulti = !document.getElementById('multiNarasumberWrapper').classList.contains('d-none');
+
+    if (isMulti) {
+      const parts = narasumberStr.split('|').map(s => s.trim()).filter(Boolean);
+      parts.slice(0, 4).forEach((part, idx) => {
+        const match = part.match(/^(.*?)\s*\((.*)\)$/);
+        if (match) {
+          document.getElementById('multiNaraNama' + (idx + 1)).value = match[1].trim();
+          document.getElementById('multiNaraJab' + (idx + 1)).value = match[2].trim();
+        } else {
+          document.getElementById('multiNaraNama' + (idx + 1)).value = part;
+        }
+      });
+    } else {
+      const match = narasumberStr.match(/^(.*?)\s*\((.*)\)$/);
+      if (match) {
+        document.getElementById('singleNaraNama').value = match[1].trim();
+        document.getElementById('singleNaraJabatan').value = match[2].trim();
+      } else {
+        document.getElementById('singleNaraNama').value = narasumberStr;
+      }
+    }
+  }
+
+  function handleBeritaFormSubmit(e) {
+    e.preventDefault();
+    const idFormat = document.getElementById('inputIdFormat').value;
+    const fmtObj = AppState.formats.find(f => f.idFormat === idFormat);
+
+    const payload = {
+      idBerita: document.getElementById('inputIdBerita').value.trim(),
+      tanggalSiar: document.getElementById('inputTanggalSiar').value,
+      idFormat: idFormat,
+      namaFormat: fmtObj ? fmtObj.namaFormat : idFormat,
+      namaReporter: document.getElementById('inputNamaReporter').value,
+      judulBeritaTopik: document.getElementById('inputJudulBerita').value.trim(),
+      narasumberJabatan: buildNarasumberStringFromForm(),
+      jenisLaporan: document.getElementById('inputJenisLaporan').value || 'Umum',
+      linkBeritaAudio: '-',
+      keteranganTambahan: document.getElementById('inputKeterangan').value.trim() || '-'
+    };
+
+    const btn = document.getElementById('btnSaveBerita');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> MENYIMPAN DATA...';
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-floppy-disk me-2"></i> SIMPAN LAPORAN BERITA';
+        if (res && res.status === 'success') {
+          AppState.berita = res.berita || [];
+          resetBeritaForm();
+          renderDashboardView();
+          renderMyRecentInputs();
+          applyMultiDimensionalFilter();
+          if (AppState.user && AppState.user.role === 'Super Admin') {
+            renderCPanelMasterBerita();
+          }
+          showCustomToast(res.message, 'success');
+        } else {
+          showCustomToast((res && res.message) || 'Gagal menyimpan data.', 'error');
+        }
+      })
+      .withFailureHandler(function(err) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-floppy-disk me-2"></i> SIMPAN LAPORAN BERITA';
+        showCustomToast('Kesalahan server: ' + err.message, 'error');
+      })
+      .saveBeritaRecord(AppState.token, payload);
+  }
+
+  function resetBeritaForm() {
+    const keepDate = document.getElementById('inputTanggalSiar').value || getTodayYMD();
+    const keepFormat = document.getElementById('inputIdFormat').value;
+    document.getElementById('formInputBerita').reset();
+    document.getElementById('inputIdBerita').value = '';
+    document.getElementById('inputTanggalSiar').value = keepDate;
+    if (keepFormat) document.getElementById('inputIdFormat').value = keepFormat;
+    document.getElementById('inputJenisLaporan').value = 'Umum';
+    document.getElementById('btnCancelEditMode').classList.add('d-none');
+    document.getElementById('btnSaveBerita').innerHTML = '<i class="fa-solid fa-floppy-disk me-2"></i> SIMPAN LAPORAN BERITA';
+    handleFormatAcaraChange();
+  }
+
+  function startEditBerita(idBerita) {
+    const item = AppState.berita.find(b => b.idBerita === idBerita);
+    if (!item) {
+      showCustomToast('Data berita tidak ditemukan.', 'error');
+      return;
+    }
+    if (!canUserModifyBerita(item)) {
+      showCustomToast('Anda hanya dapat mengedit laporan berita yang Anda input sendiri.', 'warning');
+      return;
+    }
+
+    navigateToView('input');
+    document.getElementById('inputIdBerita').value = item.idBerita;
+    document.getElementById('inputTanggalSiar').value = item.tanggalSiar;
+    document.getElementById('inputIdFormat').value = item.idFormat;
+    handleFormatAcaraChange();
+
+    const repSelect = document.getElementById('inputNamaReporter');
+    if (![...repSelect.options].some(o => o.value === item.namaReporter)) {
+      const opt = document.createElement('option');
+      opt.value = item.namaReporter;
+      opt.text = item.namaReporter;
+      repSelect.add(opt);
+    }
+    repSelect.value = item.namaReporter;
+
+    const katSelect = document.getElementById('inputJenisLaporan');
+    const validKats = ['Umum', 'RB Tematik', 'Prioritas Nasional', 'Astacita'];
+    katSelect.value = validKats.includes(item.jenisLaporan) ? item.jenisLaporan : 'Umum';
+
+    document.getElementById('inputJudulBerita').value = item.judulBeritaTopik;
+    populateNarasumberFieldsForEdit(item.narasumberJabatan);
+    document.getElementById('inputKeterangan').value = item.keteranganTambahan === '-' ? '' : item.keteranganTambahan;
+
+    document.getElementById('btnCancelEditMode').classList.remove('d-none');
+    document.getElementById('btnSaveBerita').innerHTML = '<i class="fa-solid fa-pen-to-square me-2"></i> PERBARUI LAPORAN BERITA';
+    showCustomToast('Mode Edit Aktif: Silakan perbarui data pada formulir.', 'info');
+  }
+
+  function confirmDeleteBerita(idBerita) {
+    const item = AppState.berita.find(b => b.idBerita === idBerita);
+    if (!item) return;
+    if (!canUserModifyBerita(item)) {
+      showCustomToast('Anda tidak memiliki izin menghapus laporan ini.', 'error');
+      return;
+    }
+
+    openCustomConfirm(
+      'Hapus Laporan Berita?',
+      `Laporan "${item.judulBeritaTopik}" (${item.namaReporter}) akan dihapus permanen dari database.`,
+      function() {
+        showGlobalLoader('Menghapus Laporan...', 'Memperbarui database berita');
+        google.script.run
+          .withSuccessHandler(function(res) {
+            hideGlobalLoader();
+            if (res && res.status === 'success') {
+              AppState.berita = res.berita || [];
+              renderDashboardView();
+              renderMyRecentInputs();
+              applyMultiDimensionalFilter();
+              if (AppState.user && AppState.user.role === 'Super Admin') {
+                renderCPanelMasterBerita();
+              }
+              showCustomToast(res.message, 'success');
+            } else {
+              showCustomToast((res && res.message) || 'Gagal menghapus.', 'error');
+            }
+          })
+          .withFailureHandler(function(err) {
+            hideGlobalLoader();
+            showCustomToast('Kesalahan server: ' + err.message, 'error');
+          })
+          .deleteBeritaRecord(AppState.token, idBerita);
+      },
+      'Ya, Hapus Data',
+      true
+    );
+  }
+
+  function renderMyRecentInputs() {
+    const container = document.getElementById('myRecentInputsContainer');
+    if (!AppState.user) return;
+    const myItems = AppState.berita.filter(b =>
+      AppState.user.role === 'Super Admin' ||
+      String(b.penginputUser).toLowerCase() === String(AppState.user.username).toLowerCase()
+    ).slice(0, 8);
+
+    if (myItems.length === 0) {
+      container.innerHTML = `
+        <div class="text-center text-muted py-5">
+          <i class="fa-regular fa-folder-open fs-2 mb-2 d-block"></i>
+          <span class="small">Belum ada riwayat laporan yang Anda input.</span>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = myItems.map(item => `
+      <div class="p-3 rounded-3 border bg-white">
+        <div class="d-flex justify-content-between align-items-start gap-2">
+          <div>
+            <span class="badge bg-rri-deep x-small">${escapeHtml(item.namaFormat)}</span>
+            <span class="badge bg-secondary x-small">${escapeHtml(item.jenisLaporan || 'Umum')}</span>
+            <span class="text-muted x-small ms-1"><i class="fa-regular fa-calendar me-1"></i>${escapeHtml(item.tanggalSiar)}</span>
+          </div>
+          <div class="d-flex gap-1">
+            <button class="btn btn-xs btn-outline-primary" onclick="startEditBerita('${escapeHtml(item.idBerita)}')">
+              <i class="fa-solid fa-pen"></i> Edit
+            </button>
+            <button class="btn btn-xs btn-outline-danger" onclick="confirmDeleteBerita('${escapeHtml(item.idBerita)}')">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+        </div>
+        <div class="fw-bold text-rri-deep small mt-1.5">${escapeHtml(item.judulBeritaTopik)}</div>
+        <div class="x-small text-muted mt-1">
+          <i class="fa-solid fa-user-tie me-1 text-rri-cyan"></i><strong>${escapeHtml(item.namaReporter)}</strong>
+          • Nara: ${escapeHtml(item.narasumberJabatan)}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  /**
+   * ============================================================================
+   * VIEW 3: FILTER LAPORAN MULTI-DIMENSI & GENERATOR PDF RESMI
+   * ============================================================================
+   */
+  function populateRekapFilterDropdowns() {
+    const repSelect = document.getElementById('rekapFilterReporter');
+    repSelect.innerHTML = '<option value="SEMUA">-- Semua Reporter --</option>' +
+      AppState.reporters.map(r => `<option value="${escapeHtml(r.namaReporter)}">${escapeHtml(r.namaReporter)}</option>`).join('');
+
+    const fmtSelect = document.getElementById('rekapFilterFormat');
+    fmtSelect.innerHTML = '<option value="SEMUA">-- Semua Format Acara --</option>' +
+      AppState.formats.map(f => `<option value="${escapeHtml(f.idFormat)}">${escapeHtml(f.namaFormat)}</option>`).join('');
+  }
+
+  function handleRekapModeChange() {
+    const mode = document.getElementById('rekapModePeriode').value;
+    document.getElementById('rekapBoxHarian').classList.toggle('d-none', mode !== 'HARIAN');
+    document.getElementById('rekapBoxBulan').classList.toggle('d-none', mode !== 'BULANAN');
+    document.getElementById('rekapBoxTahun').classList.toggle('d-none', mode !== 'BULANAN');
+    document.getElementById('rekapBoxIntervalStart').classList.toggle('d-none', mode !== 'INTERVAL');
+    document.getElementById('rekapBoxIntervalEnd').classList.toggle('d-none', mode !== 'INTERVAL');
+    applyMultiDimensionalFilter();
+  }
+
+  function resetRekapFilter() {
+    document.getElementById('rekapModePeriode').value = 'BULANAN';
+    const now = new Date();
+    document.getElementById('rekapBulan').value = String(now.getMonth() + 1);
+    document.getElementById('rekapTahun').value = String(now.getFullYear());
+    document.getElementById('rekapFilterReporter').value = 'SEMUA';
+    document.getElementById('rekapFilterFormat').value = 'SEMUA';
+    document.getElementById('rekapKeyword').value = '';
+    handleRekapModeChange();
+  }
+
+  function getCurrentRekapFilterParams() {
+    const fmtEl = document.getElementById('rekapFilterFormat');
+    const selectedFormatText = fmtEl.options[fmtEl.selectedIndex] ? fmtEl.options[fmtEl.selectedIndex].text : 'Semua Format Acara';
+    return {
+      mode: document.getElementById('rekapModePeriode').value,
+      tanggalHarian: document.getElementById('rekapTanggalHarian').value,
+      bulan: parseInt(document.getElementById('rekapBulan').value, 10),
+      tahun: parseInt(document.getElementById('rekapTahun').value, 10),
+      tanggalAwal: document.getElementById('rekapTanggalAwal').value,
+      tanggalAkhir: document.getElementById('rekapTanggalAkhir').value,
+      reporter: document.getElementById('rekapFilterReporter').value,
+      idFormat: document.getElementById('rekapFilterFormat').value,
+      namaFormatLabel: selectedFormatText,
+      keyword: document.getElementById('rekapKeyword').value.trim()
+    };
+  }
+
+  function applyMultiDimensionalFilter() {
+    const p = getCurrentRekapFilterParams();
+    const kw = p.keyword.toLowerCase();
+
+    const filtered = AppState.berita.filter(item => {
+      const tgl = item.tanggalSiar;
+      if (!tgl) return false;
+
+      if (p.mode === 'HARIAN' && p.tanggalHarian) {
+        if (tgl !== p.tanggalHarian) return false;
+      } else if (p.mode === 'BULANAN') {
+        const parts = tgl.split('-');
+        const y = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10);
+        if (y !== p.tahun || m !== p.bulan) return false;
+      } else if (p.mode === 'INTERVAL') {
+        if (p.tanggalAwal && tgl < p.tanggalAwal) return false;
+        if (p.tanggalAkhir && tgl > p.tanggalAkhir) return false;
+      }
+
+      if (p.reporter !== 'SEMUA' && item.namaReporter !== p.reporter) return false;
+      if (p.idFormat !== 'SEMUA' && item.idFormat !== p.idFormat && item.namaFormat !== p.idFormat) return false;
+
+      if (kw) {
+        const hay = `${item.judulBeritaTopik} ${item.narasumberJabatan} ${item.keteranganTambahan} ${item.namaReporter} ${item.jenisLaporan}`.toLowerCase();
+        if (!hay.includes(kw)) return false;
+      }
+      return true;
+    });
+
+    AppState.filteredRekap = filtered;
+    renderRekapOutput(filtered);
+  }
+
+  function renderRekapOutput(list) {
+    document.getElementById('rekapStatTotalBadge').innerText = list.length + ' Laporan';
+    document.getElementById('rekapTableSubtitle').innerText = `Menampilkan ${list.length} laporan berita yang sesuai dengan kriteria filter`;
+
+    const fmtCounts = {};
+    AppState.formats.forEach(f => { fmtCounts[f.namaFormat] = 0; });
+    list.forEach(b => {
+      fmtCounts[b.namaFormat] = (fmtCounts[b.namaFormat] || 0) + 1;
+    });
+    document.getElementById('rekapFormatSummaryBadges').innerHTML = Object.keys(fmtCounts).map(k => `
+      <span class="badge ${fmtCounts[k] > 0 ? 'bg-rri-deep text-white' : 'bg-light text-muted border'} px-2.5 py-1.5">
+        ${escapeHtml(k)}: <strong>${fmtCounts[k]}</strong>
+      </span>
+    `).join('');
+
+    const repCounts = {};
+    list.forEach(b => {
+      repCounts[b.namaReporter] = (repCounts[b.namaReporter] || 0) + 1;
+    });
+    const repKeys = Object.keys(repCounts).sort((a, b) => repCounts[b] - repCounts[a]);
+    const pillsEl = document.getElementById('rekapReporterProductivityPills');
+    if (repKeys.length === 0) {
+      pillsEl.innerHTML = '<span class="text-muted x-small fst-italic">Tidak ada data kontribusi reporter pada filter ini.</span>';
+    } else {
+      pillsEl.innerHTML = repKeys.map(rep => `
+        <div class="px-2.5 py-1 rounded-pill bg-rri-cyan-soft text-rri-deep small fw-semibold border border-info border-opacity-25">
+          <i class="fa-solid fa-user-check text-rri-cyan me-1"></i>${escapeHtml(rep)}: <span class="badge bg-rri-deep ms-1">${repCounts[rep]}</span>
+        </div>
+      `).join('');
+    }
+
+    const tbody = document.getElementById('rekapTableBody');
+    if (list.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-5">Tidak ditemukan laporan berita yang sesuai dengan filter di atas.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = list.map((item, idx) => {
+      const canModify = canUserModifyBerita(item);
+      return `
+        <tr>
+          <td>${idx + 1}</td>
+          <td class="text-nowrap fw-semibold">${escapeHtml(item.tanggalSiar)}</td>
+          <td><span class="badge bg-rri-cyan-soft text-rri-deep">${escapeHtml(item.namaFormat)}</span></td>
+          <td class="fw-semibold">${escapeHtml(item.namaReporter)}</td>
+          <td>
+            <div class="fw-bold text-rri-deep">${escapeHtml(item.judulBeritaTopik)}</div>
+            ${item.keteranganTambahan && item.keteranganTambahan !== '-' ? `<div class="x-small text-muted">Ket: ${escapeHtml(item.keteranganTambahan)}</div>` : ''}
+          </td>
+          <td class="small">${escapeHtml(item.narasumberJabatan)}</td>
+          <td class="text-center"><span class="badge bg-secondary">${escapeHtml(item.jenisLaporan || 'Umum')}</span></td>
+          <td class="text-center text-nowrap">
+            ${canModify ? `
+              <button class="btn btn-xs btn-outline-primary me-1" onclick="startEditBerita('${escapeHtml(item.idBerita)}')">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+              <button class="btn btn-xs btn-outline-danger" onclick="confirmDeleteBerita('${escapeHtml(item.idBerita)}')">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            ` : '<span class="text-muted x-small"><i class="fa-solid fa-lock"></i></span>'}
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function triggerDownloadPDF() {
+    const params = getCurrentRekapFilterParams();
+    const btn = document.getElementById('btnPrintOfficialPDF');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Merender PDF Resmi...';
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-file-pdf me-1"></i> Cetak / Download PDF Resmi';
+        if (res && res.status === 'success') {
+          const linkSource = 'data:application/pdf;base64,' + res.base64;
+          const downloadLink = document.createElement('a');
+          downloadLink.href = linkSource;
+          downloadLink.download = res.fileName || 'Laporan_SiPeKA_Berita_RRI.pdf';
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+          showCustomToast('File PDF resmi berhasil dibuat dan diunduh!', 'success');
+        } else {
+          showCustomToast((res && res.message) || 'Gagal membuat PDF.', 'error');
+        }
+      })
+      .withFailureHandler(function(err) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-file-pdf me-1"></i> Cetak / Download PDF Resmi';
+        showCustomToast('Gagal mencetak PDF: ' + err.message, 'error');
+      })
+      .generateOfficialReportPDF(AppState.token, params);
+  }
+
+  /**
+   * ============================================================================
+   * VIEW 4: CONTROL PANEL SUPER ADMIN (5 MODUL MANAJEMEN)
+   * ============================================================================
+   */
+  function switchCPanelTab(tabId, btnEl) {
+    document.querySelectorAll('.cpanel-subview').forEach(el => el.classList.add('d-none'));
+    document.getElementById(tabId).classList.remove('d-none');
+    document.querySelectorAll('#cpanelTabs .nav-link').forEach(b => b.classList.remove('active'));
+    if (btnEl) btnEl.classList.add('active');
+  }
+
+  function renderAllCPanelTables() {
+    renderCPanelFormats();
+    renderCPanelReporters();
+    renderCPanelUsers();
+    renderCPanelSettingsAndLogs();
+    renderCPanelMasterBerita();
+  }
+
+  // 1. CRUD Format Acara
+  function renderCPanelFormats() {
+    const tbody = document.getElementById('cpanelFormatTableBody');
+    tbody.innerHTML = AppState.formats.map(f => `
+      <tr>
+        <td class="fw-bold text-muted">${escapeHtml(f.idFormat)}</td>
+        <td>
+          <i class="fa-solid ${escapeHtml(f.ikonFA)} text-rri-cyan me-2"></i>
+          <strong class="text-rri-deep">${escapeHtml(f.namaFormat)}</strong>
+        </td>
+        <td><span class="badge bg-light text-dark border">${escapeHtml(f.kategoriForm)}</span></td>
+        <td class="text-center">
+          <span class="badge ${f.statusAktif === 'Aktif' ? 'bg-success' : 'bg-secondary'}">${escapeHtml(f.statusAktif)}</span>
+        </td>
+        <td class="text-center text-nowrap">
+          <button class="btn btn-xs btn-outline-primary me-1" onclick="openFormatModal('${escapeHtml(f.idFormat)}')">
+            <i class="fa-solid fa-pen"></i> Edit
+          </button>
+          <button class="btn btn-xs btn-outline-danger" onclick="confirmDeleteFormat('${escapeHtml(f.idFormat)}', '${escapeHtml(f.namaFormat)}')">
+            <i class="fa-solid fa-trash"></i> Hapus
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function openFormatModal(idFormat) {
+    const form = document.getElementById('formModalFormat');
+    form.reset();
+    if (idFormat) {
+      const f = AppState.formats.find(x => x.idFormat === idFormat);
+      if (!f) return;
+      document.getElementById('modalFormatTitle').innerText = 'Edit Format Acara';
+      document.getElementById('fmtIdFormat').value = f.idFormat;
+      document.getElementById('fmtNamaFormat').value = f.namaFormat;
+      document.getElementById('fmtKategoriForm').value = f.kategoriForm;
+      document.getElementById('fmtIkonFA').value = f.ikonFA;
+      document.getElementById('fmtStatusAktif').value = f.statusAktif;
+    } else {
+      document.getElementById('modalFormatTitle').innerText = 'Tambah Format Acara Baru';
+      document.getElementById('fmtIdFormat').value = '';
+      document.getElementById('fmtIkonFA').value = 'fa-newspaper';
+    }
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalFormatAcara')).show();
+  }
+
+  function submitModalFormat(e) {
+    e.preventDefault();
+    const payload = {
+      idFormat: document.getElementById('fmtIdFormat').value,
+      namaFormat: document.getElementById('fmtNamaFormat').value.trim(),
+      kategoriForm: document.getElementById('fmtKategoriForm').value,
+      ikonFA: document.getElementById('fmtIkonFA').value.trim(),
+      statusAktif: document.getElementById('fmtStatusAktif').value
+    };
+    showGlobalLoader('Menyimpan Format Acara...', 'Memperbarui Master Format Acara');
+    google.script.run
+      .withSuccessHandler(function(res) {
+        hideGlobalLoader();
+        if (res && res.status === 'success') {
+          AppState.formats = res.formats || [];
+          bootstrap.Modal.getInstance(document.getElementById('modalFormatAcara')).hide();
+          renderSidebarFormatShortcuts();
+          populateFormDropdowns();
+          populateRekapFilterDropdowns();
+          renderDashboardView();
+          renderCPanelFormats();
+          showCustomToast(res.message, 'success');
+        } else {
+          showCustomToast((res && res.message) || 'Gagal menyimpan format.', 'error');
+        }
+      })
+      .saveMasterFormat(AppState.token, payload);
+  }
+
+  function confirmDeleteFormat(idFormat, namaFormat) {
+    openCustomConfirm(
+      'Hapus Format Acara?',
+      `Format acara "${namaFormat}" akan dihapus dari daftar master.`,
+      function() {
+        showGlobalLoader('Menghapus Format...', 'Mohon tunggu');
+        google.script.run
+          .withSuccessHandler(function(res) {
+            hideGlobalLoader();
+            if (res && res.status === 'success') {
+              AppState.formats = res.formats || [];
+              renderSidebarFormatShortcuts();
+              populateFormDropdowns();
+              populateRekapFilterDropdowns();
+              renderDashboardView();
+              renderCPanelFormats();
+              showCustomToast(res.message, 'success');
+            } else {
+              showCustomToast((res && res.message) || 'Gagal menghapus format.', 'error');
+            }
+          })
+          .deleteMasterFormat(AppState.token, idFormat);
+      }
+    );
+  }
+
+  // 2. CRUD Data Reporter
+  function renderCPanelReporters() {
+    const tbody = document.getElementById('cpanelReporterTableBody');
+    tbody.innerHTML = AppState.reporters.map(r => `
+      <tr>
+        <td class="fw-bold text-muted">${escapeHtml(r.idReporter)}</td>
+        <td class="fw-bold text-rri-deep">${escapeHtml(r.namaReporter)}</td>
+        <td>${escapeHtml(r.nipId)}</td>
+        <td>${escapeHtml(r.jabatan)}</td>
+        <td class="text-center">
+          <span class="badge ${r.statusAktif === 'Aktif' ? 'bg-success' : 'bg-secondary'}">${escapeHtml(r.statusAktif)}</span>
+        </td>
+        <td class="text-center text-nowrap">
+          <button class="btn btn-xs btn-outline-primary me-1" onclick="openReporterModal('${escapeHtml(r.idReporter)}')">
+            <i class="fa-solid fa-pen"></i> Edit
+          </button>
+          <button class="btn btn-xs btn-outline-danger" onclick="confirmDeleteReporter('${escapeHtml(r.idReporter)}', '${escapeHtml(r.namaReporter)}')">
+            <i class="fa-solid fa-trash"></i> Hapus
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function openReporterModal(idReporter) {
+    const form = document.getElementById('formModalReporter');
+    form.reset();
+    if (idReporter) {
+      const r = AppState.reporters.find(x => x.idReporter === idReporter);
+      if (!r) return;
+      document.getElementById('modalReporterTitle').innerText = 'Edit Data Reporter';
+      document.getElementById('repIdReporter').value = r.idReporter;
+      document.getElementById('repNamaReporter').value = r.namaReporter;
+      document.getElementById('repNipId').value = r.nipId === '-' ? '' : r.nipId;
+      document.getElementById('repJabatan').value = r.jabatan;
+      document.getElementById('repStatusAktif').value = r.statusAktif;
+    } else {
+      document.getElementById('modalReporterTitle').innerText = 'Tambah Reporter Baru';
+      document.getElementById('repIdReporter').value = '';
+      document.getElementById('repJabatan').value = 'Reporter';
+    }
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalReporter')).show();
+  }
+
+  function submitModalReporter(e) {
+    e.preventDefault();
+    const payload = {
+      idReporter: document.getElementById('repIdReporter').value,
+      namaReporter: document.getElementById('repNamaReporter').value.trim(),
+      nipId: document.getElementById('repNipId').value.trim(),
+      jabatan: document.getElementById('repJabatan').value.trim(),
+      statusAktif: document.getElementById('repStatusAktif').value
+    };
+    showGlobalLoader('Menyimpan Data Reporter...', 'Memperbarui Master Reporter');
+    google.script.run
+      .withSuccessHandler(function(res) {
+        hideGlobalLoader();
+        if (res && res.status === 'success') {
+          AppState.reporters = res.reporters || [];
+          bootstrap.Modal.getInstance(document.getElementById('modalReporter')).hide();
+          populateFormDropdowns();
+          populateRekapFilterDropdowns();
+          renderDashboardView();
+          renderCPanelReporters();
+          showCustomToast(res.message, 'success');
+        } else {
+          showCustomToast((res && res.message) || 'Gagal menyimpan reporter.', 'error');
+        }
+      })
+      .saveMasterReporter(AppState.token, payload);
+  }
+
+  function confirmDeleteReporter(idReporter, namaReporter) {
+    openCustomConfirm(
+      'Hapus Data Reporter?',
+      `Nama reporter "${namaReporter}" akan dihapus dari daftar Master Reporter.`,
+      function() {
+        showGlobalLoader('Menghapus Reporter...', 'Mohon tunggu');
+        google.script.run
+          .withSuccessHandler(function(res) {
+            hideGlobalLoader();
+            if (res && res.status === 'success') {
+              AppState.reporters = res.reporters || [];
+              populateFormDropdowns();
+              populateRekapFilterDropdowns();
+              renderDashboardView();
+              renderCPanelReporters();
+              showCustomToast(res.message, 'success');
+            } else {
+              showCustomToast((res && res.message) || 'Gagal menghapus reporter.', 'error');
+            }
+          })
+          .deleteMasterReporter(AppState.token, idReporter);
+      }
+    );
+  }
+
+  // 3. CRUD Akun Pengguna
+  function renderCPanelUsers() {
+    const tbody = document.getElementById('cpanelUserTableBody');
+    tbody.innerHTML = AppState.users.map(u => {
+      const isProtected = u.username.toLowerCase() === 'superadmin';
+      return `
+        <tr>
+          <td class="fw-bold text-rri-deep">${escapeHtml(u.username)}</td>
+          <td>${escapeHtml(u.namaLengkap)}</td>
+          <td>
+            <span class="badge ${u.role === 'Super Admin' ? 'bg-warning text-dark' : 'bg-rri-cyan'}">${escapeHtml(u.role)}</span>
+          </td>
+          <td class="text-center">
+            <span class="badge ${u.statusAkun === 'Aktif' ? 'bg-success' : 'bg-secondary'}">${escapeHtml(u.statusAkun)}</span>
+          </td>
+          <td class="text-center text-nowrap">
+            <button class="btn btn-xs btn-outline-primary me-1" onclick="openUserModal('${escapeHtml(u.username)}')">
+              <i class="fa-solid fa-user-pen"></i> Edit / Reset Sandi
+            </button>
+            ${!isProtected ? `
+              <button class="btn btn-xs btn-outline-danger" onclick="confirmDeleteUser('${escapeHtml(u.username)}')">
+                <i class="fa-solid fa-trash"></i> Hapus
+              </button>
+            ` : '<span class="badge bg-light text-muted border"><i class="fa-solid fa-shield-halved me-1"></i>Dilindungi</span>'}
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function openUserModal(username) {
+    const form = document.getElementById('formModalUser');
+    form.reset();
+    const usrInput = document.getElementById('usrUsername');
+    const passInput = document.getElementById('usrPassword');
+
+    if (username) {
+      const u = AppState.users.find(x => x.username === username);
+      if (!u) return;
+      document.getElementById('modalUserTitle').innerText = 'Edit Akun / Reset Password';
+      document.getElementById('usrMode').value = 'EDIT';
+      usrInput.value = u.username;
+      usrInput.readOnly = true;
+      document.getElementById('usrNamaLengkap').value = u.namaLengkap;
+      document.getElementById('usrRole').value = u.role;
+      document.getElementById('usrStatusAkun').value = u.statusAkun;
+      passInput.required = false;
+      document.getElementById('usrPasswordLabel').innerText = 'Password Baru (Kosongkan jika tidak diubah)';
+    } else {
+      document.getElementById('modalUserTitle').innerText = 'Tambah Akun Pengguna Baru';
+      document.getElementById('usrMode').value = 'ADD';
+      usrInput.readOnly = false;
+      passInput.required = true;
+      document.getElementById('usrPasswordLabel').innerHTML = 'Password <span class="text-danger">*</span>';
+    }
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalUserAccount')).show();
+  }
+
+  function submitModalUser(e) {
+    e.preventDefault();
+    const payload = {
+      mode: document.getElementById('usrMode').value,
+      username: document.getElementById('usrUsername').value.trim(),
+      namaLengkap: document.getElementById('usrNamaLengkap').value.trim(),
+      password: document.getElementById('usrPassword').value,
+      role: document.getElementById('usrRole').value,
+      statusAkun: document.getElementById('usrStatusAkun').value
+    };
+    showGlobalLoader('Menyimpan Akun Pengguna...', 'Mengenkripsi kredensial SHA-256');
+    google.script.run
+      .withSuccessHandler(function(res) {
+        hideGlobalLoader();
+        if (res && res.status === 'success') {
+          AppState.users = res.users || [];
+          bootstrap.Modal.getInstance(document.getElementById('modalUserAccount')).hide();
+          renderCPanelUsers();
+          showCustomToast(res.message, 'success');
+        } else {
+          showCustomToast((res && res.message) || 'Gagal menyimpan akun.', 'error');
+        }
+      })
+      .saveMasterUser(AppState.token, payload);
+  }
+
+  function confirmDeleteUser(username) {
+    openCustomConfirm(
+      'Hapus Akun Pengguna?',
+      `Akun "${username}" akan dihapus dan tidak dapat lagi mengakses sistem.`,
+      function() {
+        showGlobalLoader('Menghapus Akun...', 'Mohon tunggu');
+        google.script.run
+          .withSuccessHandler(function(res) {
+            hideGlobalLoader();
+            if (res && res.status === 'success') {
+              AppState.users = res.users || [];
+              renderCPanelUsers();
+              showCustomToast(res.message, 'success');
+            } else {
+              showCustomToast((res && res.message) || 'Gagal menghapus akun.', 'error');
+            }
+          })
+          .deleteMasterUser(AppState.token, username);
+      }
+    );
+  }
+
+  // 4. Pengaturan Sistem & Log Aktivitas
+  function renderCPanelSettingsAndLogs() {
+    document.getElementById('cfgNamaStasiun').value = AppState.config.Nama_Stasiun || 'LPP RRI Jambi';
+    document.getElementById('cfgSubJudul').value = AppState.config.Sub_Judul_Aplikasi || '';
+    document.getElementById('cfgNamaPejabat').value = AppState.config.Nama_Pejabat_Tanda_Tangan || '';
+    document.getElementById('cfgNipPejabat').value = AppState.config.NIP_Pejabat || '';
+    document.getElementById('cfgKotaStasiun').value = AppState.config.Kota_Stasiun || '';
+    document.getElementById('cfgMaintenance').value = AppState.config.Status_Maintenance || 'TIDAK';
+
+    const logBody = document.getElementById('cpanelLogsTableBody');
+    if (!AppState.logs || AppState.logs.length === 0) {
+      logBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">Belum ada log aktivitas.</td></tr>';
+    } else {
+      logBody.innerHTML = AppState.logs.map(l => `
+        <tr>
+          <td class="x-small text-nowrap text-muted">${escapeHtml(l.timestamp)}</td>
+          <td class="x-small fw-bold">${escapeHtml(l.username)}</td>
+          <td><span class="badge bg-rri-cyan-soft text-rri-deep x-small">${escapeHtml(l.aksi)}</span></td>
+          <td class="x-small">${escapeHtml(l.detail)}</td>
+        </tr>
+      `).join('');
+    }
+  }
+
+  function handleSaveSettings(e) {
+    e.preventDefault();
+    const newSettings = {
+      Nama_Stasiun: document.getElementById('cfgNamaStasiun').value.trim(),
+      Sub_Judul_Aplikasi: document.getElementById('cfgSubJudul').value.trim(),
+      Nama_Pejabat_Tanda_Tangan: document.getElementById('cfgNamaPejabat').value.trim(),
+      NIP_Pejabat: document.getElementById('cfgNipPejabat').value.trim(),
+      Kota_Stasiun: document.getElementById('cfgKotaStasiun').value.trim(),
+      Status_Maintenance: document.getElementById('cfgMaintenance').value
+    };
+    showGlobalLoader('Menyimpan Konfigurasi...', 'Memperbarui Pengaturan Instansi LPP RRI');
+    google.script.run
+      .withSuccessHandler(function(res) {
+        hideGlobalLoader();
+        if (res && res.status === 'success') {
+          AppState.config = res.config || AppState.config;
+          AppState.logs = res.logs || AppState.logs;
+          applyPublicBranding();
+          renderCPanelSettingsAndLogs();
+          showCustomToast(res.message, 'success');
+        } else {
+          showCustomToast((res && res.message) || 'Gagal menyimpan pengaturan.', 'error');
+        }
+      })
+      .saveSystemSettings(AppState.token, newSettings);
+  }
+
+  function confirmClearLogs() {
+    openCustomConfirm(
+      'Bersihkan Log Aktivitas?',
+      'Seluruh catatan riwayat log aktivitas akan dikosongkan.',
+      function() {
+        showGlobalLoader('Membersihkan Log...', 'Mohon tunggu');
+        google.script.run
+          .withSuccessHandler(function(res) {
+            hideGlobalLoader();
+            if (res && res.status === 'success') {
+              AppState.logs = res.logs || [];
+              renderCPanelSettingsAndLogs();
+              showCustomToast(res.message, 'success');
+            }
+          })
+          .clearActivityLogs(AppState.token);
+      }
+    );
+  }
+
+  // 5. Kelola Master Data Berita (Super Admin)
+  function renderCPanelMasterBerita() {
+    const kw = (document.getElementById('cpanelMasterBeritaSearch').value || '').trim().toLowerCase();
+    const filtered = AppState.berita.filter(b => {
+      if (!kw) return true;
+      return `${b.idBerita} ${b.namaReporter} ${b.namaFormat} ${b.judulBeritaTopik} ${b.jenisLaporan} ${b.penginputUser}`.toLowerCase().includes(kw);
+    });
+
+    const tbody = document.getElementById('cpanelMasterBeritaBody');
+    if (filtered.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">Data berita tidak ditemukan.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = filtered.slice(0, 100).map(b => `
+      <tr>
+        <td class="x-small text-muted fw-semibold">${escapeHtml(b.idBerita)}</td>
+        <td class="text-nowrap">${escapeHtml(b.tanggalSiar)}</td>
+        <td><span class="badge bg-rri-cyan-soft text-rri-deep">${escapeHtml(b.namaFormat)}</span></td>
+        <td class="fw-semibold">${escapeHtml(b.namaReporter)}</td>
+        <td>${escapeHtml(b.judulBeritaTopik)}</td>
+        <td class="text-center"><span class="badge bg-secondary">${escapeHtml(b.jenisLaporan || 'Umum')}</span></td>
+        <td><span class="badge bg-light text-dark border">@${escapeHtml(b.penginputUser)}</span></td>
+        <td class="text-center text-nowrap">
+          <button class="btn btn-xs btn-outline-primary me-1" onclick="startEditBerita('${escapeHtml(b.idBerita)}')">
+            <i class="fa-solid fa-pen"></i> Edit
+          </button>
+          <button class="btn btn-xs btn-outline-danger" onclick="confirmDeleteBerita('${escapeHtml(b.idBerita)}')">
+            <i class="fa-solid fa-trash"></i> Hapus
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // Ubah Password Pribadi
+  function openChangeOwnPasswordModal() {
+    document.getElementById('formChangeOwnPass').reset();
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalChangeOwnPass')).show();
+  }
+
+  function submitChangeOwnPassword(e) {
+    e.preventDefault();
+    const oldP = document.getElementById('ownOldPassword').value;
+    const newP = document.getElementById('ownNewPassword').value;
+    showGlobalLoader('Memperbarui Kata Sandi...', 'Mengenkripsi kata sandi baru Anda');
+    google.script.run
+      .withSuccessHandler(function(res) {
+        hideGlobalLoader();
+        if (res && res.status === 'success') {
+          bootstrap.Modal.getInstance(document.getElementById('modalChangeOwnPass')).hide();
+          showCustomToast(res.message, 'success');
+        } else {
+          showCustomToast((res && res.message) || 'Gagal mengubah kata sandi.', 'error');
+        }
+      })
+      .changeOwnPassword(AppState.token, oldP, newP);
+  }
+</script>

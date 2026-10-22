@@ -1,0 +1,621 @@
+<style>
+  /* ==========================================================================
+     VARIABEL PALET WARNA RESMI KORPORAT LPP RRI & TIPOGRAFI
+     ========================================================================== */
+  :root {
+    --rri-deep-blue: #002B66;
+    --rri-cyan: #00A3E0;
+    --rri-navy: #001A40;
+    --rri-bg: #F0F4FA;
+    --rri-white: #FFFFFF;
+    --rri-cyan-soft: rgba(0, 163, 224, 0.14);
+    --rri-glass-bg: rgba(255, 255, 255, 0.88);
+    --rri-glass-border: rgba(255, 255, 255, 0.65);
+    --rri-shadow: 0 10px 30px -5px rgba(0, 43, 102, 0.08), 0 4px 12px -2px rgba(0, 26, 64, 0.04);
+    --sidebar-width: 280px;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--rri-bg);
+    color: #1E293B;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6, .brand-title, .fw-extrabold {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  .fw-extrabold {
+    font-weight: 800;
+  }
+
+  .x-small {
+    font-size: 0.75rem;
+  }
+
+  /* ==========================================================================
+     CONTAINER LOGO RESMI SiPeKA (GAMBAR 3 TANPA DIUBAH)
+     ========================================================================== */
+  .sipeka-logo-banner {
+    background: #FFFFFF;
+    border-radius: 0.85rem;
+    padding: 0.55rem 0.85rem;
+    max-width: 310px;
+    border: 1px solid rgba(255, 255, 255, 0.9);
+  }
+
+  .sipeka-logo-sidebar-box {
+    background: #FFFFFF;
+    border-radius: 0.7rem;
+    padding: 0.4rem 0.65rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  }
+
+  .sipeka-logo-topbar-box {
+    background: #FFFFFF;
+    border-radius: 0.5rem;
+    padding: 0.2rem 0.45rem;
+    border: 1px solid rgba(0, 43, 102, 0.1);
+  }
+
+  .sipeka-logo-topbar-box img {
+    height: 34px;
+    width: auto;
+    display: block;
+  }
+
+  /* ==========================================================================
+     UTILITAS WARNA & TOMBOL KORPORAT RRI
+     ========================================================================== */
+  .text-rri-deep { color: var(--rri-deep-blue) !important; }
+  .text-rri-cyan { color: var(--rri-cyan) !important; }
+  .text-rri-cyan-light { color: #5CE1E6 !important; }
+  .text-white-80 { color: rgba(255, 255, 255, 0.85) !important; }
+
+  .bg-rri-deep { background-color: var(--rri-deep-blue) !important; }
+  .bg-rri-cyan { background-color: var(--rri-cyan) !important; }
+  .bg-rri-navy { background-color: var(--rri-navy) !important; }
+  .bg-rri-cyan-soft { background-color: var(--rri-cyan-soft) !important; }
+  .bg-rri-soft { background-color: #EBF5FF !important; }
+
+  .btn-rri-primary {
+    background: linear-gradient(135deg, var(--rri-deep-blue) 0%, #004094 100%);
+    color: var(--rri-white);
+    border: none;
+    transition: all 0.25s ease;
+  }
+  .btn-rri-primary:hover, .btn-rri-primary:focus {
+    background: linear-gradient(135deg, var(--rri-navy) 0%, var(--rri-deep-blue) 100%);
+    color: var(--rri-white);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(0, 43, 102, 0.25);
+  }
+
+  .btn-rri-cyan {
+    background: linear-gradient(135deg, var(--rri-cyan) 0%, #0077B6 100%);
+    color: var(--rri-white);
+    border: none;
+    transition: all 0.25s ease;
+  }
+  .btn-rri-cyan:hover, .btn-rri-cyan:focus {
+    background: linear-gradient(135deg, #0088C2 0%, #005F92 100%);
+    color: var(--rri-white);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(0, 163, 224, 0.35);
+  }
+
+  .btn-outline-rri {
+    color: var(--rri-deep-blue);
+    border: 1px solid rgba(0, 43, 102, 0.25);
+    background-color: var(--rri-white);
+    font-weight: 600;
+  }
+  .btn-outline-rri:hover {
+    background-color: var(--rri-deep-blue);
+    color: var(--rri-white);
+    border-color: var(--rri-deep-blue);
+  }
+
+  .btn-xs {
+    padding: 0.25rem 0.6rem;
+    font-size: 0.74rem;
+    border-radius: 0.4rem;
+    font-weight: 600;
+  }
+
+  .btn-danger-soft {
+    background: rgba(239, 68, 68, 0.2);
+    color: #FCA5A5;
+    border: 1px solid rgba(239, 68, 68, 0.35);
+  }
+  .btn-danger-soft:hover {
+    background: #EF4444;
+    color: #FFFFFF;
+  }
+
+  /* ==========================================================================
+     MODERN CORPORATE GLASSMORPHISM CARDS
+     ========================================================================== */
+  .glass-card {
+    background: var(--rri-glass-bg);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--rri-glass-border);
+    border-radius: 1rem;
+    box-shadow: var(--rri-shadow);
+  }
+
+  .glass-card-dark {
+    background: linear-gradient(135deg, var(--rri-navy) 0%, var(--rri-deep-blue) 65%, #004E98 100%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 12px 32px rgba(0, 26, 64, 0.22);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .glass-modal {
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(16px);
+    border-radius: 1rem;
+    overflow: hidden;
+  }
+
+  /* ==========================================================================
+     HALAMAN LOGIN ELEGAN & PASSWORD MASKING
+     ========================================================================== */
+  .login-wrapper {
+    min-height: 100vh;
+    background: radial-gradient(circle at 15% 20%, #004E98 0%, var(--rri-deep-blue) 45%, var(--rri-navy) 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .login-bg-decor {
+    position: absolute;
+    width: 520px;
+    height: 520px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0, 163, 224, 0.28) 0%, transparent 70%);
+    top: -150px;
+    right: -120px;
+    pointer-events: none;
+  }
+
+  .login-glass-card {
+    background: rgba(0, 26, 64, 0.65);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 1.35rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  }
+
+  .input-group-glass .input-group-text {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-right: none;
+    color: var(--rri-cyan);
+  }
+
+  .input-group-glass .form-control {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-left: none;
+    color: var(--rri-white);
+    padding: 0.65rem 0.85rem;
+  }
+
+  .input-group-glass .form-control::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  .input-group-glass .form-control:focus {
+    background: rgba(255, 255, 255, 0.13);
+    border-color: var(--rri-cyan);
+    color: var(--rri-white);
+    box-shadow: none;
+  }
+
+  .btn-glass-toggle {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-left: none;
+    color: rgba(255, 255, 255, 0.7);
+  }
+  .btn-glass-toggle:hover {
+    color: var(--rri-white);
+    background: rgba(255, 255, 255, 0.16);
+  }
+
+  .password-masked {
+    letter-spacing: 0.12em;
+  }
+
+  /* ==========================================================================
+     LAYOUT SIDEBAR, SUBMENU DIALOG, & MAIN CONTENT (SPA)
+     ========================================================================== */
+  .app-layout {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+  }
+
+  .app-sidebar {
+    width: var(--sidebar-width);
+    background: linear-gradient(180deg, var(--rri-navy) 0%, var(--rri-deep-blue) 100%);
+    color: var(--rri-white);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1040;
+    box-shadow: 4px 0 24px rgba(0, 26, 64, 0.25);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .sidebar-brand {
+    padding: 1rem 1rem 0.85rem 1rem;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .brand-subtitle {
+    font-size: 0.72rem;
+    color: var(--rri-cyan);
+    font-weight: 700;
+  }
+
+  .sidebar-user-card {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .user-avatar-circle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--rri-cyan);
+    color: var(--rri-white);
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .sidebar-nav-scroll {
+    overflow-y: auto;
+  }
+
+  .nav-section-label {
+    font-size: 0.66rem;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.45);
+    letter-spacing: 0.08em;
+    margin-bottom: 0.45rem;
+    padding-left: 0.5rem;
+  }
+
+  .sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.62rem 0.85rem;
+    border-radius: 0.65rem;
+    color: rgba(255, 255, 255, 0.82);
+    text-decoration: none;
+    font-size: 0.86rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+
+  .sidebar-link i.menu-main-icon {
+    width: 20px;
+    text-align: center;
+    font-size: 0.95rem;
+    color: var(--rri-cyan);
+    transition: transform 0.2s ease;
+  }
+
+  .sidebar-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--rri-white);
+  }
+
+  .sidebar-link.active {
+    background: linear-gradient(90deg, var(--rri-cyan) 0%, #0077B6 100%);
+    color: var(--rri-white);
+    font-weight: 700;
+    box-shadow: 0 4px 14px rgba(0, 163, 224, 0.35);
+  }
+
+  .sidebar-link.active i {
+    color: var(--rri-white);
+  }
+
+  /* Submenu Khusus Menu Dialog (Gambar 2) */
+  .sidebar-parent-dialog {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(0, 163, 224, 0.2);
+    font-weight: 700;
+  }
+
+  .submenu-chevron {
+    margin-left: auto;
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.65);
+    transition: transform 0.25s ease;
+  }
+
+  .submenu-chevron.rotated {
+    transform: rotate(180deg);
+  }
+
+  .sidebar-submenu {
+    list-style: none;
+    padding-left: 0.85rem;
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+    border-left: 2px solid rgba(0, 163, 224, 0.45);
+    margin-left: 1.15rem;
+  }
+
+  .sidebar-sublink {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.48rem 0.75rem;
+    border-radius: 0.5rem;
+    color: rgba(255, 255, 255, 0.78);
+    text-decoration: none;
+    font-size: 0.81rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+
+  .sidebar-sublink:hover, .sidebar-sublink.active-sub {
+    background: rgba(0, 163, 224, 0.22);
+    color: #FFFFFF;
+    font-weight: 700;
+  }
+
+  .sidebar-link-admin {
+    border: 1px dashed rgba(251, 191, 36, 0.45);
+    background: rgba(251, 191, 36, 0.08);
+  }
+
+  .app-main {
+    flex: 1;
+    margin-left: var(--sidebar-width);
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .app-topbar {
+    background: rgba(255, 255, 255, 0.86);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(0, 43, 102, 0.08);
+    padding: 0.85rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1020;
+  }
+
+  .btn-icon-topbar {
+    width: 38px;
+    height: 38px;
+    border-radius: 0.6rem;
+    background: var(--rri-bg);
+    color: var(--rri-deep-blue);
+    border: 1px solid rgba(0, 43, 102, 0.12);
+  }
+
+  /* ==========================================================================
+     KOMPONEN KARTU KPI, TABEL, & FORMULIR
+     ========================================================================== */
+  .kpi-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+
+  .form-header-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 0.9rem;
+    background: linear-gradient(135deg, var(--rri-deep-blue), var(--rri-cyan));
+    color: var(--rri-white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+  }
+
+  .table-rri thead th {
+    background-color: var(--rri-deep-blue);
+    color: var(--rri-white);
+    font-size: 0.76rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 700;
+    padding: 0.75rem 0.85rem;
+    border: none;
+    white-space: nowrap;
+  }
+
+  .table-rri tbody td {
+    font-size: 0.84rem;
+    padding: 0.7rem 0.85rem;
+    border-bottom: 1px solid #E2E8F0;
+  }
+
+  .cpanel-nav-pills .nav-link {
+    color: var(--rri-deep-blue);
+    background-color: #E2E8F0;
+    font-weight: 700;
+    font-size: 0.82rem;
+    border-radius: 0.65rem;
+    padding: 0.55rem 1rem;
+  }
+
+  .cpanel-nav-pills .nav-link.active {
+    background: linear-gradient(135deg, var(--rri-deep-blue), var(--rri-cyan));
+    color: var(--rri-white);
+  }
+
+  /* ==========================================================================
+     LOADING OVERLAY & CUSTOM TOAST NOTIFICATION
+     ========================================================================== */
+  .loader-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 26, 64, 0.55);
+    backdrop-filter: blur(6px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .loader-card {
+    width: 300px;
+    border-radius: 1.15rem;
+  }
+
+  .rri-spinner {
+    width: 44px;
+    height: 44px;
+    border: 4px solid rgba(0, 163, 224, 0.25);
+    border-top-color: var(--rri-deep-blue);
+    border-radius: 50%;
+    animation: rriSpin 0.8s linear infinite;
+  }
+
+  @keyframes rriSpin {
+    to { transform: rotate(360deg); }
+  }
+
+  .custom-toast-container {
+    position: fixed;
+    top: 1.25rem;
+    right: 1.25rem;
+    z-index: 2100;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    max-width: 360px;
+    width: calc(100% - 2.5rem);
+  }
+
+  .rri-toast {
+    background: var(--rri-white);
+    border-left: 5px solid var(--rri-cyan);
+    border-radius: 0.75rem;
+    padding: 0.85rem 1rem;
+    box-shadow: 0 15px 30px rgba(0, 26, 64, 0.18);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    animation: toastSlideIn 0.25s ease forwards;
+  }
+  .rri-toast.toast-success { border-left-color: #10B981; }
+  .rri-toast.toast-error { border-left-color: #EF4444; }
+  .rri-toast.toast-warning { border-left-color: #F59E0B; }
+
+  @keyframes toastSlideIn {
+    from { opacity: 0; transform: translateX(30px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .confirm-icon-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ==========================================================================
+     RESPONSIVE MOBILE-FIRST & BOTTOM NAVIGATION
+     ========================================================================== */
+  @media (max-width: 991.98px) {
+    .app-sidebar {
+      transform: translateX(-100%);
+    }
+    .app-sidebar.show-mobile {
+      transform: translateX(0);
+    }
+    .app-main {
+      margin-left: 0;
+    }
+    .sidebar-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 26, 64, 0.55);
+      backdrop-filter: blur(3px);
+      z-index: 1035;
+    }
+  }
+
+  .mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 62px;
+    background: var(--rri-white);
+    border-top: 1px solid rgba(0, 43, 102, 0.1);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1025;
+    box-shadow: 0 -4px 20px rgba(0, 26, 64, 0.08);
+  }
+
+  .mob-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: #64748B;
+    font-size: 0.68rem;
+    font-weight: 600;
+    gap: 2px;
+    flex: 1;
+    height: 100%;
+  }
+
+  .mob-nav-item i {
+    font-size: 1.15rem;
+  }
+
+  .mob-nav-item.active {
+    color: var(--rri-deep-blue);
+    font-weight: 800;
+  }
+
+  .mob-nav-item.active i {
+    color: var(--rri-cyan);
+  }
+</style>
